@@ -1,0 +1,5 @@
+name = "Conference"
+description = "评审会"
+core = 6.x
+
+package = "Conference"

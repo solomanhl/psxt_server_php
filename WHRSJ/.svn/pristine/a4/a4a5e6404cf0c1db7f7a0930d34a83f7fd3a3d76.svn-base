@@ -1,0 +1,266 @@
+<?php
+
+function conference_expert_score_menu() {
+	
+	$items['conference/expert_score'] = array(
+			'title' => '专家评审进度',
+			'page callback' => 'conference_expert_list',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,conference_expert_score_overview
+			'weight' => 5,
+	);
+	
+	$items['conference/expert_score/list'] = array(
+			'title' => '在评评委会列表',
+			'page callback' => 'conference_expert_list',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,conference_expert_score_overview
+			'weight' => 6,
+	);
+/*
+	$items['conference/expert_score_renyuan'] = array(
+			'title' => '人员被评进度',
+			'page callback' => 'conference_expert_score_renyuan_overview',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => 10,
+	);
+*/
+	$items['conference/expert_score/%baseinfo/view'] = array(
+			'title' => '专家评审详情',
+			'page callback' => 'conference_expert_score_overview',
+			'page arguments' => array(2),
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => 10,
+	);
+	/*
+	$items['conference/expert_score_renyuan/%/view'] = array(
+			'title' => '人员被评详情',
+			'page callback' => 'conference_expert_score_renyuan_viewdetails',
+			'page arguments' => array(2),
+			'access arguments' => array('user_is_logged_in'),
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => 10,
+	);
+	*/
+	
+	return $items;
+}
+
+function conference_expert_score_viewdetails($id){  //查看专家评审详情
+	
+	global $user;
+    drupal_set_title('专家评审详情');
+    
+	// 		id	自动增长	编号
+
+	$header = array(
+			array('data' => t('编号'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
+			array('data' => t('材料袋号'),  'field' => 'code', 'width' =>'15%'),
+			array('data' => t('姓名'),  'field' => 'name', 'width' =>'15%'),
+			array('data' => t('级别'), 'field' => 'level','width' =>'5%'), 
+			array('data' => t('破格结论'), 'field' => 'poge', 'width' =>'15%'),
+			array('data' => t('测试结果'), 'field' => 'test', 'width' =>'15%'),
+			array('data' => t('评分'), 'field' => 'pingfen', 'width' =>'15%'),
+			array('data' => t('投票情况'),'field' => 'pingfen', 'width' =>'15%')
+	);
+	
+
+	$sql = "SELECT c.* FROM {conference_expert_score} c where c.expert_id = $id"; 
+	$result = db_query($sql);
+	//$tablesort = tablesort_sql($header);
+	//$result = pager_query($sql. $tablesort , 50);
+	$i = 0;
+	while ($data = db_fetch_object($result)) {
+		$i++;
+		$sql_s = "select d.* from {conference_applicant} d where d.code = ".$data->aid;
+		$result_s = db_query($sql_s);
+		
+		$data_s = db_fetch_object($result_s);
+	
+		switch ($data->type){
+			case 'not_use' :$data->type = '';break;
+			case 'yes' :$data->type = '同意';break;
+			case 'no' :$data->type = '不同意';break;
+			default:$data->type = '';break;
+		}
+		if($data_s->dbresult=='') $dbresult='';
+		elseif($data_s->dbresult=='F') $dbresult='不合格';
+		else $dbresult=$data_s->dbresult.'年合格';
+		
+			$rows[] = array('data' =>
+				array(
+						$i,
+						$data_s->code,
+						$data_s->name,
+						$data_s->level,
+						$data->type,
+						$dbresult,
+						$data->score,
+						$data->vote,
+				)
+		);	
+		
+		
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('该专家还没有评审参评人员。'), 'colspan' => 8));
+	}
+
+	$path = drupal_get_path('module', 'conference_expert_score');
+	//drupal_add_css($path .'/js/jquery.alerts.css');
+	//drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_expert_score.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+
+	return $output;
+}
+
+
+function conference_expert_list() {
+	global $user;
+	
+	$header = array(
+			array('data' => t('评委会名称'), 'field' => 'conference_name','width' =>'5%'),
+			array('data' => t('评审会'), 'field' => 'specgrp','width' =>'10%'),
+			array('data' => t('主任委员'), 'field' => 'senior_expert','width' =>'5%'),
+			array('data' => t('状态'), 'field' => 'status','width' =>'5%'),
+			array('data' => t('操作'),'width' =>'15%')
+	);
+	$sql = "SELECT * FROM {conference_baseinfo}  WHERE status=1";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$specgrp = conference_get_specgrp($data->specgrp,1);
+		switch ($data->level){
+			case 1:
+				$specgrp.='(高级)';
+				break;
+			case 2:
+				$specgrp.='(中级)';
+				break;
+			case 3:
+				$specgrp.='(高级、中级)';
+				break;
+		}
+		$edit = l('查看专家评审进度', 'conference/expert_score/' . $data->id . '/view').'&nbsp;&nbsp;';
+		$rows[] = array('data' =>
+				array(
+						$data->conference_name,
+						$specgrp,
+						$data->senior_expert,
+						$data->status?'评审中':'未开启评审',
+						$edit
+				)
+		);
+	}
+	
+	if (!$rows) {
+		drupal_set_title('没有正在召开的评委会！');
+	}
+	else{
+		drupal_set_title('评委会列表');
+	}
+	
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	return $output;
+}
+
+function conference_expert_score_overview($baseinfo = array()) {
+	global $user;
+    drupal_set_title('评审进度');
+    
+	// 		id	自动增长	编号
+
+	$header = array(
+			array('data' => t('编号'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
+			array('data' => t('评委会名称'),  'field' => 'conference_id', 'width' =>'15%'),
+			array('data' => t('专家'), 'field' => 'name','width' =>'15%'), //不会重复
+			array('data' => t('工作单位'),  'field' => 'level', 'width' =>'15%'),
+			array('data' => t('评分状态'), 'field' => 'pingfen', 'width' =>'15%'),
+			array('data' => t('投票情况'), 'field' => 'toupiao', 'width' =>'15%'),
+	);
+	
+	$expert = "0,";
+	$sql = "SELECT * FROM {conference_baseinfo_group} WHERE bid=%d";
+	$result = db_query($sql,$baseinfo['id']);
+	while($data = db_fetch_array($result)){
+		$expert .= $data['expert'].",";
+	}
+	$expert = substr($expert, 0, -1);
+	
+	$sql = "SELECT * FROM {conference_expert} WHERE id IN (%s)";
+	$result = db_query($sql,$expert);
+	
+	$i = 0;
+	while ($data = db_fetch_object($result)) {
+		$i++;
+		$sql_s = "select * from {conference_expert_score} where expert_id = %d AND conference_id = %d";
+		$result_s = db_query($sql_s, $data->id, $baseinfo['id']);
+		$count_pg = 0;
+		$count_pf = '未评分';
+		$count_tp = '未投票';
+		while($data_s = db_fetch_object($result_s)){
+			//dvm($data_s->type);
+		    if($data_s->score != null){		//统计评分
+				$count_pf = array('data'=>'已评分', 'style'=>'color:#00f;');
+			}
+		   if($data_s->vote =='赞成'||$data_s->vote =='反对'||$data_s->vote =='弃权'){		//统计评分
+				$count_tp = array('data'=>'已投票', 'style'=>'color:#00f;');
+			}
+		}
+		$rows[] = array('data' =>
+				array(
+						$i,
+						$baseinfo['conference_name'],
+						$data->name,
+						$data->organization,
+						$count_pf,
+						$count_tp,
+				)
+		);
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('无评审信息。'), 'colspan' => 8));
+	}
+
+	$path = drupal_get_path('module', 'conference_expert_score');
+	//drupal_add_css($path .'/js/jquery.alerts.css');
+	//drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_expert_score.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	docheck();
+	return $output;
+	
+}
+
+/*
+ * hook_theme
+ */
+
+function conference_expert_score_theme() {
+	return array(
+			'expert_view' => array(
+					'template' => 'tpl/expert_view',
+					'arguments' => array('expert'=>null),
+			),
+		);
+}

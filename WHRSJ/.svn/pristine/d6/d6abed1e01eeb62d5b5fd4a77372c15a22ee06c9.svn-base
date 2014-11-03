@@ -1,0 +1,7 @@
+#t_examinee{
+	width:300px;
+}
+.testform{
+	width:400px;
+	display:inline;
+}

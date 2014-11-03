@@ -1,0 +1,5 @@
+name = "Conference applicant"
+description = "参评人员"
+core = 6.x
+
+package = "Conference"

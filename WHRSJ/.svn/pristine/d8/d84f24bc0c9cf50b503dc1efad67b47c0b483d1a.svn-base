@@ -1,0 +1,181 @@
+<?php
+function conference_report_menu() {
+	
+	$items = array();
+	
+	
+	$items['conference/expert_panel/reportout'] = array(
+			'title' => '会议评审情况备案',
+			'page callback' => 'conference_report_reportout',	
+			'access callback' => 'user_is_logged_in',	
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 15,
+	);
+	
+	$items['conference/expert_panel/reportresult'] = array(
+			'title' => '会议表决情况备案',
+			'page callback' => 'conference_report_reportresult',	
+			'access callback' => 'user_is_logged_in',	
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 25,
+	);
+	$items['conference/expert_panel/wishes'] = array(
+			'title' => '主任寄语',
+			'page callback' => 'conference_report_wishes',	
+			'access callback' => 'user_is_logged_in',	
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 35,
+	);
+		return $items;
+} 
+
+function conference_report_reportout(){
+	global $user;
+	$h = array(
+			array('data' => t('序号'), 'width' =>'6%'),			
+			array('data' => t('姓名'), 'width' =>'10%'),
+			array('data' => t('专业'), 'width' =>'6%'),
+			array('data' => t('破格结论'), 'width' =>'10%'),
+			array('data' => t('赞成票数'), 'width' =>'10%'),
+			array('data' => t('反对票数'), 'width' =>'18%'),
+			array('data' => t('弃权票数'), 'width' =>'10%'),
+			array('data' => t('结果'), 'width' =>'10%'),
+	);
+
+	$header = array(
+			array('data' => t(''), 'width' =>'6%'),			
+			array('data' => t(''), 'width' =>'10%'),
+			array('data' => t(''), 'width' =>'6%'),
+			array('data' => t(''), 'width' =>'10%'),
+			array('data' => t(''), 'width' =>'10%'),
+			array('data' => t(''), 'width' =>'18%'),
+			array('data' => t(''), 'width' =>'10%'),
+			array('data' => t(''), 'width' =>'10%'),
+	);
+    $sql ="select a.* from {conference_baseinfo} a where status=1";
+    $result = db_query($sql);
+    $cnfname = db_fetch_object($result);
+    drupal_set_title('武汉市'.$cnfname->conference_name.'评审会结果表');
+    //$data[] = array ('', '', '','武汉市'.$cnfname->specgrp.'评审会结果表', '','', '','',); 
+	$sql = "SELECT c.* FROM {conference_applicant} c where c.specgrp in(select d.specgrp from {conference_baseinfo} d where status=1)ORDER BY c.id ASC";	
+	$result = db_query($sql);			
+	$tablesort = tablesort_sql($header);
+	$i = 0;
+	$n = 1;
+	$rows[] = $h;
+	while ($data = db_fetch_object($result)) {
+		$i++;
+		if ($n==1){
+			if ($i%19==0){
+				$rows[] = array('data' =>array('','','','','','主任评委签名：','','',));
+			    $rows[] = $h;
+			    $n++;
+			}
+
+		} 
+		if (($i-19)!=0){  
+		if (($i-19)%20==0&&$n!=1){
+			$rows[] = array('data' =>array('','','','','','主任评委签名：','','',));
+			$rows[] = $h;
+	      }
+		}
+		$rows[] = array('data' =>
+				array(
+						$i,
+						$data->name,
+						$data->dspec,
+						$data->pgresult,
+						$data->passno,
+						$data->failno,
+						$data->noneno,
+						$data->tpresult,
+				)
+		);
+	}
+	$path = drupal_get_path('module', 'conference_report');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	drupal_add_css($path .'/css/tables.css');
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+
+	return $output;
+}
+
+
+
+function conference_report_reportresult() {
+    $sql = "select c.* from {conference_applicant} c where c.specgrp in (select specgrp from {conference_baseinfo} where status=1)";
+    $result = db_query($sql);
+    $data1 = db_fetch_object($result);
+	$sql = "SELECT c.* FROM {conference_baseinfo} c where status=1";
+	$result = db_query($sql);
+	$data = db_fetch_object($result);
+	switch ($data->level){
+		case 1 :$level = '高级'; break;
+		case 2 :$level = '中级'; break;
+		case 3 :$level = '高中级'; break;
+	}
+	drupal_set_title('武汉市'.$data->conference_name.'专业'.$level.'评委会');
+    
+	
+	//到会评委
+	$sql ="SELECT c.* FROM conference_expert c WHERE c.specgrp IN ( SELECT specgrp FROM conference_baseinfo WHERE status=1) and position='委员'";
+	$export_result = db_query($sql);
+	$experts =array();
+	$i =0;
+	while ($data3 = db_fetch_object($export_result)) {
+		$experts[$i] = $data3->name;
+		$i++;
+	}
+	
+	$output .= theme('table', $experts, $experts);
+	$output .= theme('pager', NULL, 50, 0);
+	return $output;
+}
+
+function conference_report_wishes(){
+	global $user;
+
+	$header = array(
+	        array('data' => t('序号'), 'width' =>'10%'),	
+			array('data' => t('姓名'), 'width' =>'10%'),			
+			array('data' => t('编号'), 'width' =>'20%'),
+			array('data' => t('主任寄语'), 'width' =>'70%'),
+			
+	);
+    drupal_set_title('主任寄语');
+    //$data[] = array ('', '', '','武汉市'.$cnfname->specgrp.'评审会结果表', '','', '','',); 
+	$sql = "SELECT c.* FROM {conference_comment} c where c.specgrp in(select d.id from {conference_baseinfo} d where status=1)";	
+	$result = db_query($sql);			
+	$tablesort = tablesort_sql($header);
+	while ($data = db_fetch_object($result)) {
+		$i++;
+		$rows[] = array('data' =>
+				array(
+						$i,
+						$data->name,
+						$data->code,
+						"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$data->comment,
+				)
+		);
+	}
+	$path = drupal_get_path('module', 'conference_report');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	drupal_add_css($path .'/css/tables.css');
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+
+	return $output;
+}

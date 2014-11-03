@@ -1,0 +1,11 @@
+/*
+.form-checkboxes .form-item {
+  float: left;
+}
+.form-checkboxes{
+	clear:both;
+}
+*/
+.test .form-item{
+	float: left;
+}

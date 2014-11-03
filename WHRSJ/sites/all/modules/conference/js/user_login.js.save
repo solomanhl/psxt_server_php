@@ -1,0 +1,20 @@
+
+
+Drupal.behaviors.userLoginBehavior = function (context) {
+	
+	var autoname = $('#edit-name').autocomplete({ 
+	    //delimiter: /(,|;)\s*/, // regex or character
+	    //maxHeight:400,
+	    //width:300,
+	    //zIndex: 9999,
+	    //deferRequestBy: 0, //miliseconds
+	    //params: { country:'Yes' }, //aditional parameters
+	    //noCache: false, //default is false, set to true to disable caching
+	    // callback function:
+	    //onSelect: function(value, data){ alert('You selected: ' + value + ', ' + data); },
+	    // local autosugest options:
+	    //lookup: ['安徽省科学技术研究院', '北京市科学技术研究院', '广东省科学院', '广西省科学院'] //local lookup values 
+	  });
+	
+	autoname.enable();
+}

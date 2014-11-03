@@ -1,0 +1,5 @@
+name = "Conference report"
+description = "备案"
+core = 6.x
+
+package = "Conference"

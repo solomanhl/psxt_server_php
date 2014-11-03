@@ -1,0 +1,952 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+*/
+function conference_applicant_install() {
+	// Create tables.
+	
+ 	drupal_install_schema('conference_applicant');
+
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function conference_applicant_uninstall() {
+	// Remove tables.
+ 	drupal_uninstall_schema('conference_applicant');
+	
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function conference_applicant_schema() {	
+	
+	$schema['conference_applicant'] = array(
+			'description' => 'Stores the register info.',
+			'fields' => array(
+            'id' => array(
+		        'description' => 'The primary identifier for a register.',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+					
+			'code' => array(								//6
+				'description' => 'The {examinee}.code.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			'name' => array(
+		        'description' => 'The name.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'card_id' => array(
+		        'description' => 'The card id.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'sex' => array(
+		        'description' => 'The sex.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'birthdate' => array(
+		        'description' => 'The birthdate.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'company' => array(				//11
+		        'description' => 'The company.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'owner' => array(					
+		        'description' => 'The nature of company.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'level' => array(
+		        'description' => 'The level of examinee.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'specgrp' => array(
+		        'description' => 'The Examiner num.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'class' => array(
+		        'description' => 'The type of declare.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'graddate1' => array(
+		        'description' => 'The graduation time.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'college1' => array(
+		        'description' => 'The college.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'sspec1' => array(
+		        'description' => 'The specialty.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'educ1' => array(
+		        'description' => 'The educational background.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'graddate2' => array(						//20
+		        'description' => 'The graduation time.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'college2' => array(
+		        'description' => 'The college.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'sspec2' => array(
+		        'description' => 'The specialty.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'educ2' => array(
+		        'description' => 'The educational background.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'dspec' => array(
+		        'description' => 'The profession.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'dage' => array(					//25
+		        'description' => 'The time of profession.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'oproff1' => array(
+		        'description' => 'The postion at present.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'total1' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'oproff2' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'total2' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'nproff' => array(						//30
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'nproff1' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'excellent' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'good' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'pass' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'english' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'computer' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'noeduc' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'reeduc' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'pgresult' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'pginput' => array(				//40
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'dbresult' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'dbinput' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'pwno' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'passno' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'failno' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'noneno' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'tpresult' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'tpinput' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'bjtype' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'dspec1' => array(						//50
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'political' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			 'post' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'resume' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			
+			 'assess_year_one' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'assess_year_one_result' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			
+			 'assess_year_two' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'assess_year_two_result' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			
+			 'assess_year_three' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'assess_year_three_result' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			
+			 'assess_year_four' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'assess_year_four_result' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			
+			 'assess_year_five' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'assess_year_five_result' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+					
+			'education_and_train' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+					
+			'achievement' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+					
+			'publication' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+					
+			'award' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+
+			'timestamp' => array(
+							'description' => 'The timestamp',
+							'type' => 'int',
+							'unsigned' => TRUE,
+							'not null' => TRUE,
+							'default' => 0),
+			 ),		
+//----fields
+			'indexes' => array(
+			 		'id' =>array('id'),
+					'code' => array('code'),
+					'name' => array('name'),
+					'card_id' => array('card_id'),
+					'specgrp' => array('specgrp'),
+			 ),
+			'primary key' => array('id')
+			
+	 );	
+	 
+	 	$schema['conference_applicant_achievement'] = array(
+			'description' => 'Stores the register paper info.',
+			'fields' => array(
+            'id' => array(
+		        'description' => 'The primary identifier for a register.',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+					
+	 		'aid' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+	 	
+	 		'code' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'type' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 5,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'name' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'timestamp' => array(
+				'description' => 'The timestamp',
+		        'type' => 'varchar',
+		        'length' => 20,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'author_order' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'fid' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+	 	
+	 		'filepath' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+			'description' => array(
+					'description' => '',
+					'type' => 'text',
+					//'not null' => TRUE,
+					'size' => 'big'),
+			 ),		
+//----fields
+			'indexes' => array(
+			 		'id' =>array('id'),
+					'aid' => array('aid'),
+					'name' => array('name'),
+			 ),
+			'primary key' => array('id')
+	 );	
+	 
+	 	$schema['conference_baseinfo'] = array(
+			'description' => '',
+			'fields' => array(
+            'id' => array(
+		        'description' => '',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+	 	
+	 		'specgrp' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'location' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+					
+	 		'assess_number' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+					
+	 		'expert_number' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+					
+	 		'pass_number' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+					
+	 		'staff' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'conference_name' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'senior_expert' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'level' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 10,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'timestamp' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'status' => array(
+		        'description' => '',
+		        'type' => 'int',
+		        'not null' => TRUE,
+		        'default' => 0),
+			 ),		
+//----fields
+			'indexes' => array(
+			 		'id' =>array('id'),
+					'conference_name' => array('conference_name'),
+					'specgrp' => array('specgrp'),
+			 ),
+			'primary key' => array('id')
+	 );	
+	 
+	 	$schema['conference_specgrp'] = array(
+			'description' => '',
+			'fields' => array(
+            'id' => array(
+		        'description' => '',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+	 	
+	 		'name' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 	
+	 		'code' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			 ),		
+//----fields
+			'indexes' => array(
+			 		'id' =>array('id'),
+					'name' => array('name'),
+					'code' => array('code'),
+			 ),
+			'primary key' => array('id')
+	 );	
+	 
+	 
+	//建立专家信息表
+	$schema['conference_expert'] = array(
+			'description' => 'Stores the expert info.',
+			'fields' => array(
+            'id' => array(
+		        'description' => 'The primary identifier for a expert.',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+					
+			
+			'name' => array(
+		        'description' => 'The name.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+	        'position' => array(
+		        'description' => 'The posiion.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'specgrp' => array(
+		        'description' => 'The specgrp.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'conference_name' => array(
+		        'description' => 'The conference_name.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'level' => array(
+		        'description' => 'The level.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'organization' => array(
+		        'description' => 'The organization.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'contact' => array(
+		        'description' => 'The contact.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'uname' => array(
+		        'description' => 'The uname.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'pass' => array(
+		        'description' => 'The pass.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+			
+			'timestamp' => array(
+							'description' => 'The timestamp',
+							'type' => 'int',
+							'unsigned' => TRUE,
+							'not null' => TRUE,
+							'default' => 0),
+			 ),		
+
+			'primary key' => array('id'),
+			
+	 );
+	 
+//建立专家评分表
+	 $schema['conference_expert_score'] = array(
+			'description' => 'Stores the score info.',
+			'fields' => array(
+            'id' => array(
+		        'description' => 'The primary identifier for a expert.',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+					
+			'conference_id' => array(
+		        'description' => 'The conference_id.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+	        'expert_id' => array(
+		        'description' => 'The expert_id.',
+		        'type' => 'int',
+		        //'length' => 255,
+		        'not null' => TRUE,
+		        'default' => 0),
+	
+			'aid' => array(
+		        'description' => 'The aid.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'type' => array(
+		        'description' => 'The type.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'vote' => array(
+		        'description' => 'The type.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'content' => array(
+		        'description' => 'The content.',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'score' => array(
+		        'description' => 'The score.',
+		        'type' => 'int',
+		        //'length' => 255,
+		        'not null' => TRUE,
+		        'default' => 0),
+	
+			'description' => array(
+		        'description' => 'The description.',
+		        'type' => 'text',//text类型不能赋予初值
+		        //'length' => 255,
+		        'size' => 'big',
+		        //'not null' => TRUE,定义成不能为空时，接口没传值过来会发生错误
+	 			),
+			
+			'timestamp' => array(
+				'description' => 'The timestamp',
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0),
+			 ),
+
+			'primary key' => array('id'),
+			
+	 );
+	 
+//建立评语表
+	 $schema['conference_comment'] = array(
+			'description' => 'Stores the comment info.',
+			'fields' => array(
+            'id' => array(
+		        'description' => 'The primary identifier for a expert.',
+		        'type' => 'serial',
+		        'unsigned' => TRUE,
+		        'not null' => TRUE),
+	
+			'specgrp' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 
+			'code' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	 
+			'name' => array(
+		        'description' => '',
+		        'type' => 'varchar',
+		        'length' => 255,
+		        'not null' => TRUE,
+		        'default' => ''),
+	
+			'comment' => array(
+		        'description' => 'The description.',
+		        'type' => 'text',//text类型不能赋予初值
+		        //'length' => 255,
+		        'size' => 'big',
+		        //'not null' => TRUE,定义成不能为空时，接口没传值过来会发生错误
+	 			),
+	 		),
+			'indexes' => array(
+			 		'id' =>array('id'),
+					'specgrp' => array('specgrp'),
+					'code' => array('code'),
+					'name' => array('name'),
+			 ),
+			'primary key' => array('id'),
+			
+	 );
+	 
+
+
+	 /*
+	  * 分组信息表
+	 */
+	 $schema['conference_baseinfo_group'] = array(
+	 		'description' => '',
+	 		'fields' => array(
+	 				'id' => array(
+	 						'description' => '',
+	 						'type' => 'serial',
+	 						'unsigned' => TRUE,
+	 						'not null' => TRUE),
+	 
+	 				'name' => array(
+	 						'description' => 'group name',
+	 						'type' => 'varchar',
+	 						'length' => 255,
+	 						'not null' => TRUE,
+	 						'default' => ''),
+	 
+	 				'bid' => array(
+	 						'description' => 'baseinfo id',
+	 						'type' => 'varchar',
+	 						'length' => 255,
+	 						'not null' => TRUE,
+	 						'default' => ''),
+	 
+	 				'expert' => array(
+	 						'description' => 'expert',
+	 						'type' => 'varchar',
+	 						'length' => 255,
+	 						'not null' => TRUE,
+	 						'default' => ''),
+	 
+	 				'leader' => array(
+	 						'description' => 'leader',
+	 						'type' => 'varchar',
+	 						'length' => 255,
+	 						'not null' => TRUE,
+	 						'default' => ''),
+	 
+	 				'dspec' => array(
+	 						'description' => 'dspec',
+	 						'type' => 'varchar',
+	 						'length' => 255,
+	 						'not null' => TRUE,
+	 						'default' => ''),
+	 		),
+	 		//----fields
+	 		'indexes' => array(
+	 				'id' =>array('id'),
+	 		),
+	 		'primary key' => array('id')
+	 );
+	 
+	return $schema;
+}

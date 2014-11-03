@@ -1,0 +1,133 @@
+<?php
+
+
+function conference_menu() {
+	$items = array();
+	
+	$items['introduce'] = array(
+			//'title' => '',
+			'page callback' => 'conference_introduce',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	$items['conference'] = array(
+			'title' => '武汉市专业技术资格评审系统',
+			'page callback' => 'conference_applicant_overview',
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_CALLBACK
+	);
+	
+	$items['test'] = array(
+			'title' => '测试专用',
+			'page callback' => 'my_test',
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_CALLBACK
+	);
+	
+	/*
+	$items['conference/applicant'] = array(
+			'title' => '参评人员列表',
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			'access arguments' => array('access administration pages'),			
+			'weight' => -10
+	);
+	
+	$items['conference/applicant/add'] = array(
+			'title' => '添加参评人员',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_applicant_form'),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => -6,
+	);*/
+	
+	/*
+	$items['conference/expert'] = array(
+			'title' => '评审专家管理',
+			'page callback' => 'conference_expert_overview',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 10,
+	);
+	
+	$items['conference/expert/list'] = array(
+			'title' => '评审专家',
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => -10,
+	);
+	
+	$items['conference/expert/add'] = array(
+			'title' => '添加专家',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_expert_form'),
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 10,
+	);	
+	*/
+	
+	
+	return $items;
+}
+
+/*
+function conference_page(){
+	if(user_is_logged_in())	{
+		if(user_access('administer users')){
+			$output = conference_register_admin_overview();
+		}
+		else{
+			$output = conference_register_overview();
+		}
+	}
+	else{
+		drupal_set_title('');
+		$output = theme('conference_introduce');
+	}
+	 
+	return $output;
+}*/
+
+function conference_introduce() {
+	$output = theme('conference_introduce');
+	return $output;
+}
+
+/*
+ * hook_theme
+*/
+
+function conference_theme() {
+	return array(
+			'conference_introduce' => array(
+					'template' => 'tpl/conference-introduce',
+					'arguments' => array(),
+			),
+
+	);
+}
+
+function my_test(){
+	$strs="12,45,78,98";
+	$result = array(); 
+	$array = array(); 
+	$strs = str_replace('，', ',', $strs); 
+	$strs = str_replace("n", ',', $strs); 
+	$strs = str_replace("rn", ',', $strs); 
+	$strs = str_replace(' ', ',', $strs); 
+	$array = explode(',', $strs); 
+	foreach ($array as $key => $value) { 
+		if ('' != ($value = trim($value))) { 
+			$result[] = $value; 
+		} 
+	}
+	$result[1];
+	dvm($result);
+	$num=count($result);
+	dvm($num);
+	return '$result'; 
+}

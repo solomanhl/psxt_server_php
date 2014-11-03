@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+.tabl
+{
+border-collapse:collapse;
+}
+.tabl td
+{
+border:1px solid black;
+}
+.tabl th
+{
+border:1px solid black;
+}

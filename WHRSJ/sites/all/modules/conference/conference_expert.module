@@ -1,0 +1,1086 @@
+<?php
+
+/**
+ * 评审专家
+ *
+ */
+//菜单定义
+function conference_expert_menu() {
+
+	$items = array();
+	/*
+	 $items['conference/expert'] = array(
+	 		'title' => '评审专家管理',
+	 		'page callback' => 'conference_expert_overview',
+	 		'access callback' => 'user_is_logged_in',
+	 		'type' => MENU_LOCAL_TASK,
+	 		//'type' => MENU_DEFAULT_LOCAL_TASK,
+	 		'weight' => 10,
+	 );
+
+	$items['conference/expert/list'] = array(
+			'title' => '评审专家列表',
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => -10,
+	);
+
+	$items['conference/expert/add'] = array(
+			'title' => '添加评审专家',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_expert_form'),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 9,
+	);
+
+	$items['conference/expert/%conference_expert'] = array(
+			'title' => '评审专家列表',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_expert_form',2),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_CALLBACK,
+			'weight' => 10,
+	);
+
+	$items['conference/expert/%conference_expert/edit'] = array(
+			'title' => '评审专家信息修改',
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_CALLBACK,
+			'weight' => 10,
+	);
+	*/
+	//专家登录
+	$items['expert/login'] = array(
+			'page callback' => 'conference_expert_login',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+
+	$items['getfailed'] = array(
+			'page callback' => 'conference_getfailed',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+
+	//提交破格结果和评分
+	$items['expert/score'] = array(
+			'page callback' => 'conference_expert_score',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	//提交评分以及意见完成
+	$items['expert/complete'] = array(
+			'page callback' => 'conference_expert_complete',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	//提交小组意见
+	$items['expert/opinion'] = array(
+			'page callback' => 'conference_expert_opinion',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	//提交小组意见
+	$items['expert/check'] = array(
+			'page callback' => 'conference_expert_check',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	//提交投票结果
+	$items['expert/vote'] = array(
+			'page callback' => 'conference_expert_vote',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+
+	//提交评语
+	$items['expert/comment'] = array(
+			'page callback' => 'conference_expert_comment',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	//去重
+	$items['expert/test'] = array(
+			'page callback' => 'conference_expert_test',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+
+	//传递评分信息
+	$items['expert/score.xml'] = array(
+			'page callback' => 'conference_expert_score_xml',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+
+	$items['expert/failed.xml'] = array(
+			'page callback' => 'failed_xml',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+//显示评审专家信息列表
+function conference_expert_overview() {
+	global $user;
+
+	// 		id	自动增长	编号
+	// 		name	varchar	姓名
+	// 		position	varchar	职务
+	// 		conference_name	varchar	评委会名称
+	// 		level	varchar	评委会级别
+	// 		company	varchar	工作单位
+	// 		contact	varchar	联系方式
+
+	$header = array(
+			array('data' => t('编号'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
+			array('data' => t('评委会名称'),  'field' => 'conference_name', 'width' =>'15%'),
+			array('data' => t('评委会级别'),  'field' => 'level', 'width' =>'10%'),
+			array('data' => t('专家姓名'), 'field' => 'name','width' =>'10%'),
+			array('data' => t('工作单位'), 'field' => 'organization', 'width' =>'20%'),
+			array('data' => t('职务'), 'field' => 'position', 'width' =>'10%'),
+			array('data' => t('联系方式'), 'field' => 'contact', 'width' =>'10%'),
+			array('data' => t('编辑'),'width' =>'10%')
+	);
+
+	$sql = "SELECT c.* FROM {conference_expert} c";
+	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql. $tablesort , 50);
+	while ($data = db_fetch_object($result)) {
+
+		$edit = l('修改', 'conference/expert/' . $data->id . '/edit') .'&nbsp;&nbsp;&nbsp;' . l('删除', 'conference/expert/' . $data->id . '/delete', array('attributes' => array('id' => $data->id, 'class'=>'delete-expert')));
+
+		$rows[] = array('data' =>
+				array(
+						$data->id,
+						$data->conference_name,
+						$data->level,
+						$data->name,
+						$data->organization,
+						$data->position,
+						$data->contact,
+						$edit
+				)
+		);
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('还没有添加专家信息。'), 'colspan' => 9));
+	}
+
+	$path = drupal_get_path('module', 'conference_expert');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+
+
+	return $output;
+
+}
+
+//进入修改表单
+function conference_expert_form(&$form_state, $edit = array()) {
+	//dvm($edit);调试
+	$form['register'] = array(
+			'#type' => 'fieldset',
+			'#weight' => -8,
+	);
+
+	$form['register']['conference_name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('评委会名称'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['conference_name'])?$edit['conference_name'] :'',
+			//'#weight' => -6,
+			'#required' => TRUE
+	);
+
+	/*$form['register']['specgrp'] = array(
+	 '#type' => 'textfield',
+			'#title' => t('评委会编号'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['conference_name'])?$edit['conference_name'] :'',
+			'#weight' => -6,
+			'#required' => TRUE
+	);*/
+
+	$form['register']['level'] = array(
+			'#type' => 'textfield',
+			'#title' => t('评委会级别'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['level'])?$edit['level'] :'',
+			//'#weight' => -6,
+			'#required' => TRUE
+	);
+
+	$form['register']['name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('专家姓名'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['name'])?$edit['name'] :'',
+			//'#weight' => -6,
+			'#required' => TRUE
+	);
+
+	$form['register']['organization'] = array(
+			'#type' => 'textfield',
+			'#title' => t('工作单位'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['organization'])?$edit['organization'] :'',
+			//'#weight' => -6,
+			//'#required' => TRUE
+	);
+
+	$form['register']['contact'] = array(
+			'#type' => 'textfield',
+			'#title' => t('联系方式'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['contact'])?$edit['contact'] :'',
+			//'#weight' => -6,
+			//'#required' => TRUE
+	);
+
+	$form['register']['uname'] = array(
+			'#type' => 'textfield',
+			'#title' => t('登录用户名'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['uname'])?$edit['uname'] :'',
+			//'#weight' => -6,
+			'#required' => TRUE
+	);
+
+	$form['register']['pass'] = array(
+			'#type' => 'textfield',
+			'#title' => t('登录密码'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['pass'])?$edit['pass'] :'',
+			//'#weight' => -6,
+			'#required' => TRUE
+	);
+
+	$position = '委员';
+	if($edit['position']=='主任委员') $position = '主任委员';
+	$form['register']['position'] = array(
+			'#type' => 'radios',
+			'#title' => t('是否主任评委'),
+			'#default_value' => $position,
+			'#options' => array('主任委员'=>'是', '委员'=>'否'),
+	);
+
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$form['register']['id'] = array('#type' => 'hidden', '#value' => $edit['id']);
+	}
+
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#weight' => 10,
+	);
+
+	return $form;
+
+}
+//从数据库读数据
+function conference_expert_load($id) {
+	return db_fetch_array(db_query("SELECT * FROM {conference_expert} WHERE id = %d", $id));
+}
+//提交函数
+function conference_expert_form_submit($form, &$form_state) {
+	global $user;
+
+	$edit = &$form_state['values'];
+
+	$node = new stdClass();
+
+	foreach ($edit as $key => $value){
+		$node->$key = $value;
+	}
+	$node->specgrp = $edit['conference_name'];
+
+	$node->timestamp = time();
+
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$node->id = $edit['id'];
+		drupal_write_record('conference_expert', $node, array('id'));
+		drupal_set_message('成功修改评审专家信息.');
+	}
+	else{
+		drupal_write_record('conference_expert', $node);
+		drupal_set_message('成功添加评审专家信息.');
+	}
+	$form_state['redirect'] = 'conference/expert/';
+}
+
+
+
+function conference_expert_login(){
+
+	$output = "登录失败";
+	$uname = trim($_GET['userName']);
+	$password = trim($_GET['passWord']);
+	$position = "";//评委的职位  主任委员/组长/委员
+	if (isset($uname)&&isset($password)){
+// 		$sql="SELECT * FROM {conference_expert} WHERE name ='".$uname."' AND pass='".$password."' AND id IN (SELECT g.expert FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g ON b.id = g.bid WHERE b.status =1)";
+// 		$result = db_query($sql);
+// 		$expert = db_fetch_array($result); //shuzu
+// 		$pwid = $expert['id'];
+		$sql = "SELECT g.*,b.senior_expert, b.type FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g ON b.id = g.bid WHERE b.status =1";
+		$result = db_query($sql);
+		while($data = db_fetch_array($result)){
+			$experts = $data['expert'];
+			$pw = split ('[,]', $data['expert']);
+			$sql="SELECT * FROM {conference_expert} WHERE name ='".$uname."' AND pass='".$password."' AND id IN ($experts)";
+			$result = db_query($sql);
+			$expert = db_fetch_array($result); //shuzu
+			$pwid = $expert['id'];
+			for($i=0;$i<count($pw);$i++){
+				if ($pwid==$pw[$i]) {
+					$group = $data;break;//获取评委所在分组信息
+				}
+			}
+		}
+		if($group['type'] == 1){
+			$sql = "SELECT g.*,b.senior_expert, b.type FROM {conference_baseinfo} b INNER JOIN {conference_scene_group} g ON b.id = g.sbid WHERE b.status =1";
+			$result = db_query($sql);
+			while($data = db_fetch_array($result)){
+					if ($pwid==$data['leader']) {
+						$sgroup = $data;break;//获取评委所在分组信息
+					}
+			}
+		}
+		if($group) {
+			if($group['type'] == 1){
+				if($sgroup){
+					$position = "委员";
+					if($expert['id'] == $sgroup['leader']) {$position = "组长";}
+					if($expert['name'] == $sgroup['senior_expert']) {$position = "主任委员";}
+				}
+				else{
+					$position = "委员";
+				}
+				$output  = "登录成功|".$position."|".$group['id']."|"."现场分组";
+			}
+			else{
+				$position = "委员";
+				if($expert['id'] == $group['leader']) {$position = "组长";}
+				if($expert['name'] == $group['senior_expert']) {$position = "主任委员";}
+				$output  = "登录成功|".$position."|".$group['id']."|"."0";
+			}
+			
+		}
+	}
+	//print(db_fetch_object($result));
+	//$output=$uname.$password;
+	print $output;
+}
+
+//查看状态1
+function conference_expert_complete(){
+	$output = "";
+	//	$json = '[{"aid":123,"type":1,"content":"test1","score":44,"description":"test1"},{"aid":321,"type":0,"content":"test2","score":66,"description":"test2"}]';
+	$expert_name = trim($_GET['pwid']);//评委name
+	$expert_id = getpwid($expert_name);
+	$sql = "SELECT * FROM {conference_baseinfo} b  WHERE b.`status`=1";
+	$result = db_query($sql);
+	$s_result='0,';//处理后查询人的评委会id
+	$conference_id = 0;
+	$expert_num = 0;
+	while($s_result = db_fetch_array($result)){
+		$spec_sql .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
+		$conference_id = $s_result['id'];
+		$expert_num = $s_result['expert_number'];
+	}
+	$spec_sql = substr($spec_sql, 0, -1);
+	$count1 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql)"));
+	$count2 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND score >=0 AND description = ''"));
+	$count3 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND opinion != ''"));
+	$count4 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND vote !=''"));
+	$count5 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND expert_id = $expert_id AND vote !=''"));
+	$pgover = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.pgresult='' AND c.class='04'"));
+	$pgrenyuan = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.class='04'"));
+	$testover = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.dbresult='' AND c.noeduc='01'"));
+	$testrenyuan = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.noeduc='01'"));
+	if($count1!= $count3){
+		$output = "正在写意见";
+	}
+	else{
+			if(($pgover != null && $pgrenyuan != null)||($testover != null && $testrenyuan != null)){
+				$output = "正在写意见";
+			}
+			else{
+				if($count1 == $count5){
+					$output = "投票结束";
+				}
+				else{
+					if($count1 != ($count4/$expert_num)){
+						$output = "正在投票";
+					}
+					else{
+						$output = "评审结束";
+					}
+				}
+					
+			}
+	
+	}
+ 	print $output;	 
+}
+
+//查看状态2
+function conference_expert_complete2($expert = null){
+	$output = "";
+	//	$json = '[{"aid":123,"type":1,"content":"test1","score":44,"description":"test1"},{"aid":321,"type":0,"content":"test2","score":66,"description":"test2"}]';
+//	$expert_name = trim($_GET['pwid']);//评委name
+	$expert_name = $expert;//评委name
+	$expert_id = getpwid($expert_name);
+	$sql = "SELECT * FROM {conference_baseinfo} b  WHERE b.`status`=1";
+	$result = db_query($sql);
+	$s_result='0,';//处理后查询人的评委会id
+	$conference_id = 0;
+	$expert_num = 0;
+	while($s_result = db_fetch_array($result)){
+		$spec_sql .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
+		$conference_id = $s_result['id'];
+		$expert_num = $s_result['expert_number'];
+	}
+	$spec_sql = substr($spec_sql, 0, -1);
+	$count1 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql)"));
+	$count2 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND score >=0 AND description = ''"));
+	$count3 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND opinion != ''"));
+	$count4 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND vote !=''"));
+	$count5 = db_result(db_query("SELECT COUNT(*) FROM {conference_expert_score}  WHERE conference_id = $conference_id AND expert_id = $expert_id AND vote !=''"));
+	$pgover = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.pgresult='' AND c.class='04'"));
+	$pgrenyuan = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.class='04'"));
+	$testover = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.dbresult='' AND c.noeduc='01'"));
+	$testrenyuan = db_result(db_query("SELECT * FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.noeduc='01'"));
+	if($count1!= $count3){
+		$output = "正在写意见";
+	}
+	else{
+		if(($pgover != null && $pgrenyuan != null)||($testover != null && $testrenyuan != null)){
+			$output = "正在写意见";
+		}
+		else{
+			if($count1 == $count5){
+				$output = "投票结束";
+			}
+			else{
+				if($count1 != ($count4/$expert_num)){
+					$output = "正在投票";
+				}
+				else{
+					$output = "评审结束";
+				}
+			}
+				
+		}
+
+	}
+	return $output;
+}
+//提交评分结果
+function conference_expert_score(){
+//	$json = '[{"aid":123,"type":1,"content":"test1","score":44,"description":"test1"},{"aid":321,"type":0,"content":"test2","score":66,"description":"test2"}]';
+	$json = trim($_POST['data']);
+//	var_dump(json_decode($json, true));
+	$json = json_decode($json, true);
+	$expert_name = trim($_POST['pwid']);
+ 	$expert_id = getpwid($expert_name);
+//	$description=str_replace('"',"&quot;",$description);
+//	$description=str_replace("'"," ",$description);
+	$pwhtype = 0;
+	$sql = "SELECT g.*,b.type FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid)";
+	$result = db_query($sql);
+	while($data = db_fetch_array($result)){
+		$pwhtype = $data['type'];
+		$expert = split ('[,]', $data['expert']);
+		for($i=0;$i<count($expert);$i++){
+			if ($expert_id==$expert[$i]) {
+				$conference_id = $data['bid'];break;//获取评委数量
+			}
+		}
+	}
+	$output = "接收失败";
+	$panduan_score = 0;
+	foreach($json as $k=>$val){
+			if($pwhtype == 0){
+				$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE expert_id=%d AND aid=%d AND conference_id=%d";
+				$result = db_query($sql, $expert_id, $val['id'], $conference_id);
+			}
+			
+			if($pwhtype == 1){
+				$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE aid=%d AND conference_id=%d";
+				$result = db_query($sql,  $val['id'], $conference_id);
+			}
+			$sc_num = db_fetch_array($result);
+			$aid = $val['id'];
+			$type = $val['poge'];
+			$content = $val['content'];
+			$score = $val['total'];
+			$gerenyijian = $val['gerenyijian'];
+			$description= $val['description'];
+			if($sc_num['num']==0){
+				$sql = "INSERT INTO conference_expert_score (conference_id,expert_id,aid,type,content,score,description,gerenyijian) values ('$conference_id','$expert_id','$aid','$type','$content','$score','$description','$gerenyijian')";
+			} 
+			else{
+				if($pwhtype == 1){
+					$sql = "UPDATE {conference_expert_score} SET expert_id='".$expert_id."',type='".$type."',score='".$score."',description='".$description."',gerenyijian='".$gerenyijian."' WHERE aid='".$aid."'";
+				}
+				else{
+					$sql = "UPDATE {conference_expert_score} SET type='".$type."',score='".$score."',description='".$description."' WHERE expert_id='".$expert_id."',gerenyijian='".$gerenyijian."'AND aid='".$aid."'";
+				}
+				
+			} 
+			$expert_score = db_query($sql);
+			if($expert_score) {
+				conference_expert_averagescore($aid,$expert_name);
+			}
+			else{
+				$panduan_score = 1;
+				 break;
+			}
+			$panduan_score = 2;	
+		}
+	
+
+// 	$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE expert_id=%d AND aid=%d AND conference_id=%d";
+// 	$result = db_query($sql, $expert_id, $aid, $conference_id);
+// 	$sc_num = db_fetch_array($result);
+// 	if($sc_num['num']==0) $sql = "INSERT INTO conference_expert_score (conference_id,expert_id,aid,type,content,score,description) values ('$conference_id','$expert_id','$aid','$type','$content','$score','$description')";
+// 	else $sql = "UPDATE {conference_expert_score} SET type='".$type."',score='".$score."',description='".$description."' WHERE expert_id='".$expert_id."' AND aid='".$aid."'";
+// 	$expert_score = db_query($sql);
+
+	if($panduan_score == 1) {
+		$output = "接收失败";
+	}
+	if($panduan_score == 2){
+		$output = "接收成功";
+	}
+	
+	print($output);
+	exit(); 
+}
+
+function conference_expert_test(){
+	$sql = "SELECT b.* FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid)";
+	$result = db_query($sql);
+	$info= db_fetch_array($result);
+	$num = $info['expert_number'];
+	$conference_id = $info['id'];
+	for($i = 0;$i<$num;$i++){
+		$sql_qc = "delete from conference_expert_score where opinion != '' and vote = '' and conference_id = $conference_id and id in
+					(
+					select a.id from
+					(
+					select min(id) id from conference_expert_score a where EXISTS
+					(
+					select 1 from conference_expert_score b where a.aid=b.aid group by aid  HAVING count(1)>1
+					)
+					group by aid
+					) a
+					)";
+	$quc = db_query($sql_qc);
+	}
+	if($quc){
+		echo("去重成功");
+	}
+	else{
+		echo("meiyouchongfu");
+	}
+}
+
+//提交小组意见
+function conference_expert_check(){
+	$info = '';
+	$output = "没有重复";
+	$codes= trim($_POST['data']);
+	$expert_name = trim($_POST['pwid']);
+	$expert_id = getpwid($expert_name);
+	$sql = "SELECT g.* FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid)";
+	$result = db_query($sql);
+	$conference_id = 0;
+	while($data = db_fetch_array($result)){
+		$expert = split ('[,]', $data['expert']);
+		for($i=0;$i<count($expert);$i++){
+			if ($expert_id==$expert[$i]) {
+				$conference_id = $data['bid'];break;//获取评委数量
+			}
+		}
+	}
+	$sql = "SELECT s.*,e.name AS expert_name FROM {conference_expert_score} s LEFT JOIN {conference_expert} e ON s.expert_id = e.id WHERE s.aid IN ($codes) AND s.conference_id=$conference_id AND s.expert_id != $expert_id";
+	$result = db_query($sql);
+	while($data = db_fetch_array($result)){
+		$code = $data['aid'];
+		$expert_name = $data['expert_name'];
+		$info .= "(".$code.",".$expert_name."),";
+		$output = $info;
+	}
+	
+	print($output);
+	exit();
+}
+
+//提交小组意见
+function conference_expert_opinion(){
+//	$json = '[{"id":"3011250002","opinion":"%E4%B8%8D%E9%80%9A%E8%BF%87","total":"27","group_score":""},{"id":"3011250003","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"8061250004","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"8031250001","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"0301250005","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"0301250006","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"8081250007","opinion":"%E9%80%9A%E8%BF%87","total":"36","group_score":"9"},{"id":"3081250008","opinion":"%E9%80%9A%E8%BF%87","total":"25","group_score":"9"},{"id":"1062410001","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"1062410002","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":"9"},{"id":"1062410003","opinion":"%E9%80%9A%E8%BF%87","total":"27","group_score":""}]';
+//	$json = '[{"id":"3081280271","opinion":"不推荐","total":"","group_score":""}]';
+
+	$expert_name = trim($_POST['pwid']);
+	$expert_id = getpwid($expert_name);
+	$zhuangtai = conference_expert_complete2($expert_name);
+	if($zhuangtai == '正在写意见'){
+	$json = trim($_POST['data']);
+//		var_dump(json_decode($json, true));
+	$json = json_decode($json, true);
+	}
+	//	$description=str_replace('"',"&quot;",$description);
+	//	$description=str_replace("'"," ",$description);
+	$sql = "SELECT g.* FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid)";
+	$result = db_query($sql);
+	$conference_id = 0;
+	while($data = db_fetch_array($result)){
+		$expert = split ('[,]', $data['expert']);
+		for($i=0;$i<count($expert);$i++){
+			if ($expert_id==$expert[$i]) {
+				$conference_id = $data['bid'];break;//获取评委数量
+			}
+		}
+	}
+	
+	$output = "接收失败";
+	$panduan_score = 0;
+	foreach($json as $k=>$val){
+		$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE aid=%d AND conference_id=%d";
+// 		$result = db_query($sql, $expert_id, $val['id'], $conference_id);
+// 		$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE aid=%d AND conference_id=%d";
+ 		$result = db_query($sql, $val['id'], $conference_id);
+		$sc_num = db_fetch_array($result);
+		$aid = $val['id'];
+		$opinion = $val['opinion'];
+		$total = $val['total'];
+		$group_score = $val['group_score'];
+ 		if($sc_num['num']==0){
+ 			$sql = "INSERT INTO conference_expert_score (conference_id,expert_id,aid,score,opinion) values ('$conference_id','$expert_id','$aid','$total','$opinion')";
+ 		}
+ 		
+ 		else{
+// 		if($group_score != ''){
+// 			$sql = "UPDATE {conference_expert_score} SET opinion='".$opinion."',group_score='".$group_score."' WHERE aid='".$aid."'";
+// 		}
+// 		else{
+// 			$sql = "UPDATE {conference_expert_score} SET opinion='".$opinion."',group_score='".$total."' WHERE aid='".$aid."'";
+// 		}
+// 			if($opinion != ''){
+ 				$sql = "UPDATE {conference_expert_score} SET opinion='".$opinion."',expert_id='".$expert_id."' WHERE aid='".$aid."' AND opinion != '' ";
+// 			}
+//			if($opinion != ''){
+//				$sql = "UPDATE {conference_expert_score} SET opinion='".$opinion."',expert_id='".$expert_id."' WHERE aid='".$aid."'";
+//			}
+// 			$sqlde = "delete from conference_expert_score where aid in (select aid from conference_expert_score group by aid having count(aid) > 1) AND id not in (select max(id) from conference_expert_score group by aid having count(aid)>1) AND opinion != '' AND conference_id =$conference_id ";
+ 		}
+//  		$sql_qc = "delete from conference_expert_score where opinion != '' and conference_id = $conference_id and id in
+//  		(
+//  		select a.id from
+//  		(
+//  		select min(id) id from conference_expert_score a where EXISTS
+//  		(
+//  		select 1 from conference_expert_score b where a.aid=b.aid group by aid  HAVING count(1)>1
+//  		)
+//  		group by aid
+//  		) a
+//  		)";
+//  		db_query($sql_qc);
+ 		$expert_score = db_query($sql);
+ //		if($opinion != ''){
+ 			$sql_plus = "UPDATE {conference_applicant} SET opinion_plus='".$opinion."',expert_id_plus='".$expert_id."' WHERE code='".$aid."'";
+//  		}
+//  		else{
+//  			$sql_plus = "UPDATE {conference_applicant} SET opinion_plus='".$opinion."',expert_id_plus='".$expert_id."' WHERE code='".$aid."'";
+//  		}
+		$expert_opinion = db_query($sql_plus);
+		if($expert_score && $expert_opinion) {
+			$panduan_score = 2;
+		}
+		else{
+			$panduan_score = 1;
+			break;
+		}
+		
+	}
+
+
+	// 	$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE expert_id=%d AND aid=%d AND conference_id=%d";
+	// 	$result = db_query($sql, $expert_id, $aid, $conference_id);
+	// 	$sc_num = db_fetch_array($result);
+	// 	if($sc_num['num']==0) $sql = "INSERT INTO conference_expert_score (conference_id,expert_id,aid,type,content,score,description) values ('$conference_id','$expert_id','$aid','$type','$content','$score','$description')";
+	// 	else $sql = "UPDATE {conference_expert_score} SET type='".$type."',score='".$score."',description='".$description."' WHERE expert_id='".$expert_id."' AND aid='".$aid."'";
+	// 	$expert_score = db_query($sql);
+
+	if($panduan_score == 1) {
+		$output = "接收失败";
+	}
+	if($panduan_score == 2){
+		$output = "接收成功";
+	}
+
+	print($output);
+	exit();
+}
+
+//提交投票结果
+function conference_expert_vote(){
+	$json = trim($_POST['data']);
+//	var_dump(json_decode($json, true));
+	$json = json_decode($json, true);
+	$group_id = trim($_POST['pwhid']);
+	$sql = "SELECT * FROM conference_baseinfo_group WHERE id = $group_id";
+	$baseinfo = db_fetch_array(db_query($sql));
+	$conference_id = $baseinfo['bid'];
+	$experts = $baseinfo['expert'];
+	$expert_name = trim($_POST['pwid']);
+	$sql_e = "SELECT c.* FROM {conference_expert} c WHERE c.name = '".$expert_name."' AND c.id IN ($experts)";
+	$result = db_query($sql_e);
+	while($expert = db_fetch_object($result))
+	{
+		$expert_id = $expert->id;
+	}
+    $output = "接收失败";
+	$panduan_vote = 0;
+	foreach($json as $k=>$val){
+		$aid = $val['id'];
+		$vote = $val['vote'];
+		$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} WHERE expert_id='".$expert_id."' AND aid='".$aid."' AND conference_id='".$conference_id."'";
+		$sc_num = db_fetch_array(db_query($sql));
+		if($sc_num['num']==1){
+			$sql = "UPDATE {conference_expert_score} SET vote = '".$vote."' WHERE aid='".$aid."' AND expert_id ='".$expert_id."' AND conference_id='".$conference_id."'";
+		}
+		else {
+			$sql = "INSERT INTO conference_expert_score (conference_id,expert_id,aid,vote) values ('$conference_id','$expert_id','$aid','$vote')";
+		}
+		$expert_vote = db_query($sql);
+		if($expert_vote){
+			conference_expert_tpresult($aid);
+		}
+		else{
+			$panduan_vote = 1;
+			break;
+		}
+		$panduan_vote = 2;
+	}	
+	
+	if($panduan_vote == 1) {
+		$output = "接收失败";
+		}
+	if($panduan_vote == 2){
+		$output = "接收成功";
+		}
+	print($output);
+	exit();
+
+}
+
+function conference_expert_averagescore($aid,$expert_name){
+	$pwid = getpwid($expert_name);
+	$sql = "SELECT g.*,b.type FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid)";
+	$type = 0;
+	$result = db_query($sql);
+	while($data = db_fetch_array($result)){
+		$type = $data['type'];
+		$expert = split ('[,]', $data['expert']);
+		for($i=0;$i<count($expert);$i++){
+			if ($pwid==$expert[$i]) {
+				$expert_number = count($expert);break;//获取评委数量
+			}
+		}
+	}
+	$sql = "SELECT COUNT(*) AS num FROM {conference_expert_score} c WHERE c.aid = $aid";
+	$num_a = db_fetch_array(db_query($sql));
+	$num = $num_a['num'];//已评分的值
+	if($type == 1){
+			$sql = "SELECT * FROM {conference_expert_score} c WHERE c.aid = $aid";
+			$pingjun = 0;
+			$total = 0;
+			$pgtotal = 0;
+			$pgstyle = 0;
+			$result_s = db_query($sql);
+			while($score = db_fetch_array($result_s)){
+				$pingjun = $score['score'];
+				$total += $score['score'];
+// 				if($score['type'] == 'yes'){
+// 					$pgtotal++;
+// 					$pgstyle = 1;
+// 					$sql = "UPDATE {conference_applicant} c SET c.pgresult = '同意' WHERE c.code = ".$aid;
+// 					$setsql = db_query($sql);
+// 				}
+// 				elseif ($score['type'] == 'no'){
+// 					$sql = "UPDATE {conference_applicant} c SET c.pgresult = '不同意' WHERE c.code = ".$aid;
+// 					$setsql = db_query($sql);
+// 					$pgstyle = 1;
+// 				}
+			}
+// 			if($pgstyle == '1') {
+// 			if ($score['type'] == 'yes') $sql = "UPDATE {conference_applicant} c SET c.pgresult = '同意' WHERE c.code = ".$aid;
+// 				else $sql = "UPDATE {conference_applicant} c SET c.pgresult = $stype WHERE c.code = ".$aid;
+// 				$setsql = db_query($sql);
+// 			}
+				$averagescore = $pingjun;
+			$sql = "UPDATE {conference_applicant} c SET c.bjtype = '".$averagescore."'WHERE c.code = ".$aid;
+			$setsql = db_query($sql);
+	}
+	else{
+		if($num == $expert_number){
+			$sql = "SELECT * FROM {conference_expert_score} c WHERE c.aid = $aid";
+			$pingjun = 0;
+			$total = 0;
+			$pgtotal = 0;
+			$pgstyle = 0;
+			$result_s = db_query($sql);
+			
+			while($score = db_fetch_array($result_s)){
+				$pingjun = $score['score'];
+				$total += $score['score'];
+				if($score['type'] == 'yes'){
+					$pgtotal++;
+					$pgstyle = 1;
+				}
+				elseif ($score['type'] == 'no'){
+					$pgstyle = 1;
+				}
+			}
+			if($pgstyle == '1') {
+				$score['type'] = $stype;
+				if ($score['type'] == 'yes') $sql = "UPDATE {conference_applicant} c SET c.pgresult = '同意' WHERE c.code = ".$aid;
+				else $sql = "UPDATE {conference_applicant} c SET c.pgresult = '不同意' WHERE c.code = ".$aid;
+				$setsql = db_query($sql);
+			}
+			$averagescore = floor($total/$num);
+			$sql = "UPDATE {conference_applicant} c SET c.bjtype = '".$averagescore."'WHERE c.code = ".$aid;
+			$setsql = db_query($sql);
+		}
+	}
+	
+}
+
+function conference_expert_tpresult($aid){
+	$vote = array('yes'=>0,'no'=>0,'give_up'=>0);
+	$sql = "SELECT expert_number FROM {conference_baseinfo} c WHERE c.status = '1'";
+	$result = db_query($sql);
+	$expert_number = 0;
+	while($expert = db_fetch_array($result)){
+		$expert_number =$expert_number+$expert['expert_number'];
+	}
+
+	$sql = "SELECT * FROM {conference_expert_score} c WHERE c.aid = $aid";
+	$result = db_query($sql);
+
+	while($tpresult = db_fetch_object($result)){
+		switch ($tpresult->vote){
+			case '赞成' :$vote['yes']++;break;
+			case '反对' :$vote['no']++;;break;
+			case '弃权' :$vote['give_up']++;;break;
+			default:$data->type = '';break;
+		}
+	}
+	$vote_num = $vote['yes']+$vote['no']+$vote['give_up'];
+	if($vote_num == $expert_number){
+		$sql_p = "SELECT c.* FROM {conference_applicant} c WHERE c.code = ".$aid;
+		$person = db_fetch_array(db_query($sql_p));
+
+		$condition = $expert_number*2/3;
+		if(($vote['yes'] >= $condition)&&($person['dbresult']!='F')&&($person['pgresult']!='不同意')) $sql = "UPDATE {conference_applicant} c SET c.passno = ".$vote['yes'].", c.failno = ".$vote['no'].", c.noneno = ".$vote['give_up'].", c.tpresult = '1' WHERE c.code = ".$aid;
+		else $sql = "UPDATE {conference_applicant} c SET c.passno = ".$vote['yes'].", c.failno = ".$vote['no'].", c.noneno = ".$vote['give_up'].", c.tpresult = '2' WHERE c.code = ".$aid;
+		$setsql = db_query($sql);
+	}
+}
+
+
+//传递参评人员测评结果信息.xml
+function conference_expert_score_xml() {
+
+	//----
+	$type = 0;
+	$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+	$result = db_query($sql);
+	$specgrp='';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		$type = $s_result['type'];
+		$specgrp .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
+	}
+	$specgrp = substr($specgrp, 0, -1);
+	//-------处理过滤条件：1.评委会   2.级别
+
+	$sql = "SELECT COUNT(*) AS num FROM {conference_applicant} c WHERE bjtype='' AND (specgrp IN ($specgrp)) ORDER BY c.specgrp ASC";
+	$num_a = db_fetch_array(db_query($sql));
+	$num = $num_a['num'];
+	$osql = "SELECT COUNT(*) AS num FROM {conference_applicant} c WHERE opinion_plus='' AND (specgrp IN ($specgrp)) ORDER BY c.specgrp ASC";
+	$onum_a = db_fetch_array(db_query($osql));
+	$onum = $onum_a['num'];
+	
+	if($num == 0 || $onum == 0){
+		$sql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp IN ($specgrp)  ORDER BY c.specgrp ASC";
+		$result = db_query($sql);
+		$items = '';
+		while($score = db_fetch_object($result)){
+			$items .= theme('conference_expert_score',$score);
+			//dvm($items);
+		}
+		$getinfo = new stdClass();//显示版本信息
+		$getinfo->name = $spe_info['conference_name'];
+		$getinfo->id = $spe_info['id'];
+
+		$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+		$output .= "<root name=\"" . $getinfo->name."\" id=\"". $getinfo->id ."\">";
+		$output .= "\n";
+		$output .= $items;
+		
+		$output .= "</root>\n";
+		print($output);
+		//return 'test';
+	}
+ 	else print(null);
+ 	exit();
+//	return '123';
+}
+
+function failed_xml() {
+	$pwname = trim($_GET['pwid']);
+	$pwid = getpwid($pwname);
+	$sql = "SELECT g.*,b.specgrp,b.level FROM {conference_baseinfo} b INNER JOIN {conference_baseinfo_group} g WHERE (b.`status`=1 AND b.id = g.bid AND g.leader =%d)";
+	$result = db_query($sql, $pwid);
+	while($data = db_fetch_array($result)){
+		$dspec = $data['dspec'];
+		$specgrp = $data['specgrp'];
+		switch ($data['level']){
+			case 2:
+				$specgrp = $specgrp+100;
+				break;
+			case 3:
+				$specgrp .= ','.($specgrp+100);
+				break;
+		}
+	}
+	$items = '';
+	$psql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp IN (%s) AND dspec IN (%s) AND tpresult = '2'";
+	$result = db_query($psql, $specgrp, $dspec);
+	while($failed = db_fetch_object($result)){
+		$items .= theme('conference_failed',$failed);
+	}
+	$getinfo = new stdClass();//显示版本信息
+	$getinfo->name = $spe_info['conference_name'];
+	$getinfo->id = $spe_info['id'];
+	$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+	$output .= "<root name=\"" . $getinfo->name."\" id=\"". $getinfo->id ."\">";
+	$output .= "\n";
+	$output .= $items;
+	$output .= "</root>\n";
+	print($output);
+	exit();
+	//return '';
+}
+
+
+function conference_getfailed(){
+	$output  = "等待";
+	//----
+	$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+	$result = db_query($sql);
+	$specgrp='0,';//处理后查询人的评委会id
+	$assess=0;
+	while($s_result = db_fetch_array($result)){
+		$assess += $s_result['assess_number'];
+		$specgrp .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
+	}
+	$specgrp = substr($specgrp, 0, -1);
+	
+	//-------处理过滤条件：1.评委会   2.级别
+	$sql = "SELECT count(*) AS num FROM {conference_applicant} c WHERE tpresult<>'' AND (specgrp IN ($specgrp))";
+	$result = db_query($sql);
+	$num = db_fetch_array($result);
+	if($num['num']==$assess) $output='开始';
+	print $output;
+}
+
+function conference_expert_comment(){
+    $json = trim($_POST['data']);
+    $json = json_decode($json, true);
+	$pwname = trim($_POST['pwid']);//评委name
+	$pwid = getpwid($pwname);
+	$sql = "SELECT g.*,b.id FROM {conference_baseinfo} b INNER JOIN conference_baseinfo_group g WHERE (b.`status`=1 AND b.id = g.bid)";
+			$result = db_query($sql);
+			while($data = db_fetch_array($result)){
+				$expert = split ('[,]', $data['expert']);
+				for($i=0;$i<count($expert);$i++){
+					if ($pwid==$expert[$i]) {
+						$specgrp = $data['id'];break;//获取评委所在分组信息
+					}
+				}
+			}
+	
+	$output = "接收失败";
+	$panduan_comment = 0;
+	foreach($json as $k=>$val){
+	$code = trim($val['id']);
+	$name = trim($val['name']);
+	$comment = trim($val['jiyu']);
+	$comment=str_replace('"',"&quot;",$comment);
+	$comment=str_replace("'"," ",$comment);
+	$result = db_query("SELECT count(*) AS num FROM {conference_comment} c WHERE code = $code AND specgrp = $specgrp");
+	$num = db_fetch_array($result);
+		if($num[num]){
+			$sql = "UPDATE {conference_comment} SET comment = '".$comment."' WHERE code = $code AND specgrp = $specgrp";
+		}
+		else {
+			$sql = "INSERT INTO conference_comment (specgrp,code,name,comment) values ('$specgrp','$code','$name','$comment')";
+		}
+		$check = db_query($sql);
+		if(!$check){
+			$panduan_comment = 1;
+			break;
+		}
+	$panduan_comment =2;
+	}
+	if($panduan_comment == 1){
+		$output = "接收失败";
+	}
+	if($panduan_comment == 2){
+		$output = "接收成功";
+	}
+	print($output);
+	exit();
+}
+
+/*
+ * hook_theme
+ */
+//传递参评人员测评结果信息
+function conference_expert_theme() {
+	return array(
+			'conference_expert_score' => array(
+					'template' => 'tpl/conference_expert',
+					'arguments' => array('score'=>null),
+			),
+			'conference_failed' => array(
+					'template' => 'tpl/conference_failed',
+					'arguments' => array('failed'=>null),
+			),
+	);
+}

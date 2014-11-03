@@ -1,0 +1,5 @@
+name = "Conference expert"
+description = "评审专家"
+core = 6.x
+
+package = "Conference"

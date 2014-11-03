@@ -1,0 +1,1989 @@
+<?php
+
+/**
+ * 参评人员
+ *
+ */
+
+function conference_applicant_menu() {
+	
+	$items = array();	
+
+	$items['conference/applicant'] = array(
+			'title' => '参评人员管理',
+			'page callback' => 'conference_applicant_overview',
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			//'type' => MENU_LOCAL_TASK,
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'weight' => -10
+	);
+	
+	$items['conference/applicant/list'] = array(
+			'title' => '参评人员列表',
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			//'type' => MENU_LOCAL_TASK,
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'weight' => -10
+	);
+	
+	$items['conference/applicant/test'] = array(
+			'title' => '测试结果录入',
+			'type' => MENU_LOCAL_TASK,
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_test_form'),
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'weight' => -9
+	);
+	/*
+	$items['conference/applicant/add'] = array(
+			'title' => '添加参评人员',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_applicant_form'),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => -6,
+	);
+	*/
+	/*
+	$items['conference/applicant/%conference_applicant'] = array(
+			'title' => '参评人员',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_applicant_form', 2),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 8,
+	);
+	*/
+	
+	$items['getinfo.json'] = array(
+			'page callback' => 'conference_test_getinfo',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_CALLBACK,
+	);
+	/*
+	$items['conference/applicant/%conference_applicant/edit'] = array(
+			'title' => '参评人员信息修改',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_applicant_form', 2),
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 6,
+	);
+	*/
+	//成果
+	$items['conference/applicant/%conference_applicant/achmentview'] = array(
+			'title' => '其他信息',
+			'page callback' => 'conference_applicant_achievement',
+			'page arguments' => array(2),
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 7,
+	);
+	
+	$items['conference/applicant/%conference_applicant/achmentupload'] = array(
+			'title' => '上传资料附件',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_applicant_achievement_form',2),
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 8,
+	);
+	
+	//评委会信息
+	
+	$items['conference/expert_panel'] = array(
+			'title' => '评委会管理',
+			'page callback' => 'conference_expert_panel_list',
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => 10,
+	);
+
+// 	$items['conference/expert_panel'] = array(
+// 			'title' => '评委会管理',
+// 			'page callback' => 'conference_expert_panel_list',
+// 			'access callback' => 'user_is_logged_in',
+// 			//'access arguments' => array('access administration pages'),
+// 			'type' => MENU_DEFAULT_LOCAL_TASK,
+// 			//'type' => MENU_DEFAULT_LOCAL_TASK,
+// 			'weight' => 11,
+// 	);
+	
+	$items['conference/expert_panel/list'] = array(
+			'title' => '评委会列表',
+			'page callback' => 'conference_expert_panel_list',
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_DEFAULT_LOCAL_TASK,
+			//'type' => MENU_DEFAULT_LOCAL_TASK,
+			'weight' => -7,
+	);
+	
+	$items['conference/expert_panel/%expert_group/edit'] = array(
+			'title' => '评委会编辑',
+			'page callback' => 'conference_expert_panel_edit',
+			'page arguments' => array(2),
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			'weight' => 7,
+	);
+	
+	$items['conference/expert_panel/add'] = array(
+			'title' => '添加评委会',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('conference_expert_panel_form'),
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => -6,
+	);
+/*
+ * XML
+ */
+	$items['conference/applicant.xml'] = array(
+			'page callback' => 'conference_applicant_export_xml',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);	
+	
+	return $items;
+}
+
+function conference_applicant_achievement($edit = array()) {
+		$header = array(
+			array('data' => t('类型'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
+			array('data' => t('名称'), 'field' => 'organization','width' =>'40%'),
+			array('data' => t('作用'), 'field' => 'name','width' =>'15%'),
+			array('data' => t('备注信息'), 'field' => 'others','width' =>'40%'),
+			//array('data' => t('修改'), 'field' => 'edit','width' =>'10%'),
+	);
+	$code = $edit['code'];
+	$sql = "SELECT c.* FROM {conference_applicant_achievement} c WHERE c.code = $code";
+	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql. $tablesort , 50);
+	while ($data = db_fetch_object($result)) {
+		//$edit = l('修改', 'conference/applicant/' . $data->id . '/edit') ;// .'&nbsp;&nbsp;&nbsp;' . l('删除', 'conference/applicant/' . $data->id . '/delete', array('attributes' => array('id' => $data->id, 'class'=>'delete-applicant')));
+		$rows[] = array('data' =>
+				array(
+						$data->type,
+						$data->name,
+						$data->author_order,
+						$data->description,
+					//	$edit
+				)
+		);
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('还没有成果附件信息。'), 'colspan' => 4));
+		drupal_set_title('还没有上传成果附件信息');
+	}
+	else{
+	//	$num = conference_get_participant_number();
+	//	drupal_set_title('贵单位已经上传'.$num .'名参会人员信息');
+	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	return $output;
+}
+
+function conference_applicant_paper() {
+	$output = "论文";
+	return $output;
+}
+
+function conference_applicant_award() {
+	$output = "获奖";
+	return $output;
+}
+
+/**
+ * 成果
+ * @param unknown_type $form_state
+ * @param unknown_type $edit
+ * @return multitype:string number Ambigous <The, string, NULL, A>
+ */
+
+
+function conference_applicant_achievement_form(&$form_state, $edit = array()){
+	global $user;
+	$form['upload'] = array(
+			'#type' => 'fieldset',
+			'#weight' => -8,
+	);	
+	
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$form['upload']['id'] = array('#type' => 'hidden', '#value' => $edit['id']);
+		$form['upload']['code'] = array('#type' => 'hidden', '#value' => $edit['code']);
+	}
+	
+	$form['upload']['pname'] = array(
+	        '#type' => 'textfield', 
+	        '#title' => t('人员姓名'),
+			'#size' => 10,
+			'#maxlength' => 255,
+			'#default_value' => isset($edit['name'])?$edit['name'] :'',
+			'#weight' => -10,
+			'#attributes' => array('readonly' => 'readonly')
+			//'#required' => TRUE
+	);
+	
+	$form['upload']['type'] = array(
+	        '#type' => 'radios', 
+	        '#title' => t('资料类型'),
+	        //'#default_value' => isset($edit['sex'])?$edit['sex'] :'', 
+	        '#options' => array( '成果' => '成果', '论文' => '论文', '获奖' => '获奖','学历' => '学历' ),
+		    '#weight' => -9,
+		    '#required' => TRUE
+	);
+
+	$form['upload']['name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('资料名称'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			//'#default_value' => isset($edit['name'])?$edit['name'] :'',
+			'#weight' => -8,
+			'#required' => TRUE
+	);
+	
+	$form['upload']['timestamp'] = array(
+			'#type' => 'textfield',
+			'#title' => t('时间'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			//'#default_value' => isset($edit['name'])?$edit['name'] :'',
+			'#weight' => -7,
+			//'#required' => TRUE
+	);
+
+	$form['upload']['author_order'] = array(
+			'#type' => 'textfield',
+			'#title' => t('作用（第几作者  或  主持、参与）'),
+			'#size' => 80,
+			'#maxlength' => 255,
+			//'#default_value' => isset($edit['name'])?$edit['name'] :'',
+			'#weight' => -6,
+			//'#required' => TRUE
+	);
+
+	 $form['upload']['document'] = array(
+	 		'#type' => 'file',
+	 		'#title' => t('上传资料'),
+	 		'#size' => 80,
+	 		'#weight' => -5,
+	 		//'#description' => '请上传PDF格式的附件。',
+	 	);
+
+	$form['upload']['description'] = array(
+			'#type' => 'textarea',
+			'#title' => '备注信息',
+			//'#default_value' => isset($edit['description'])?$edit['description'] :'',
+			'#rows' => 3,
+			'#weight' => 1,
+	);
+/*
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$form['id'] = array('#type' => 'textfield', '#value' => $edit['id']);
+	}
+*/
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#weight' => 10,
+	);
+	$form['#attributes']['enctype'] = 'multipart/form-data';
+
+	return $form;
+
+}
+
+function conference_applicant_load($id) {
+	return db_fetch_array(db_query("SELECT * FROM {conference_applicant} WHERE id = %d", $id));
+}
+function expert_panel_load($id) {
+	return db_fetch_array(db_query("SELECT * FROM {conference_baseinfo} WHERE id = %d", $id));
+}
+function expert_group_load($id) {
+		return db_fetch_array(db_query("SELECT * FROM {conference_baseinfo} WHERE id = %d", $id));
+}
+
+
+function conference_get_file_path($node = NULL) {
+	global $user;
+	$path = array();
+
+	if (!variable_get('get_image_path', 0)) {
+		$path[] = 'photos';
+	} else {
+			
+		//$m = explode('|', format_date(time(), 'custom', "Y|m|d"));
+		$m = explode('|', format_date(time(), 'custom', "y|m|d"));
+		$a = array('%uid' => $user->uid, '%username' => $user->name, '%Y' => $m[0], '%m' => $m[1], '%d' => $m[2]);
+		if (isset($node)) {
+			if (!empty($node->nid)) {
+				$a['%nid'] = $node->nid;
+			}
+
+			if (!empty($node->uid)) {
+				$a['%uid'] = $node->uid;
+			}
+		}
+
+		$b = strtr(variable_get('get_image_path', 'get_image'), $a);
+		$path = explode('/', $b);
+	}
+
+	$dirs = array();
+
+	foreach($path as $folder) {
+		$dirs[] = $folder;
+		$t = file_create_path(file_directory_path() . '/' . implode("/", $dirs));
+		if (!file_check_directory($t, FILE_CREATE_DIRECTORY)) {
+			return false;
+		}
+	}
+
+	return file_directory_path() . '/' .$b;
+}
+
+function conference_applicant_achievement_form_submit($form, &$form_state) {
+	global $user;
+	$edit = &$form_state['values'];
+
+	$path = conference_get_file_path();
+	if (!$path) {
+		return FALSE;
+	}
+	
+	$document = '';
+	$fid = 0;
+
+	if($file = file_save_upload('document', array(), $path)) {
+		$fid = $file->fid;
+			$document = $file->filepath;
+	}
+
+	$document = new stdClass();
+
+	//$document->aid = $edit['id'];
+	$document->code = $edit['code'];
+	$document->type = $edit['type'];
+	$document->name = $edit['name'];
+	$document->timestamp = $edit['timestamp'];
+	$document->author_order = $edit['author_order'];
+	$document->fid = $fid;
+	$document->filepath = $file->filepath;
+	$document->description  = $edit['description'];
+	//dvm($document);
+	/*
+	$document->aid  = $edit->aid;
+	$document->name = $edit['name'];
+	$document->fid  = $fid;
+	//$document->document  = $document;
+	$document->description = $edit['description'];
+	$node->timestamp = time()
+	;*/
+	
+	drupal_write_record('conference_applicant_achievement', $document);
+
+	drupal_set_message('成功上传资料.');
+
+	//$form_state['redirect'] = 'conference/add-document';
+}
+
+
+function conference_applicant_overview() {
+	global $user;
+
+	$header = array(
+			array('data' => t('材料袋号'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
+			array('data' => t('姓名'), 'field' => 'name','width' =>'5%'),
+			array('data' => t('评委会'), 'field' => 'specgrp','width' =>'10%'),
+			array('data' => t('级别'), 'field' => 'level','width' =>'5%'),
+			array('data' => t('专业'), 'field' => 'dspec','width' =>'5%'),
+			array('data' => t('申报类型'), 'field' => 'class','width' =>'10%'),
+			array('data' => t('答辩结果'), 'field' => 'dbresult','width' =>'10%'),
+			array('data' => t('破格结果'), 'field' => 'pgresult','width' =>'10%'),
+			array('data' => t('编辑'),'width' =>'15%')
+	);
+	//----
+	$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+	$result = db_query($sql);
+	$spec_sql='';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		if($s_result['specgrp'] < 200){
+			$midspecgrp = $s_result['specgrp']+100;
+			switch($s_result['level']){
+				case 1 : $specgrp = $s_result['specgrp'];break;//1-高级   2-中级  3-高+中
+				case 2 : $specgrp = $s_result['specgrp'];break;
+				case 3 : $specgrp = $s_result['specgrp']." OR specgrp = ".$midspecgrp;break;
+			}
+		}
+		else $specgrp=$s_result['specgrp'];
+		
+		if($spec_sql=='') $spec_sql.=$specgrp;
+		else $spec_sql.=" OR specgrp=".$specgrp;
+	}
+	//-------处理过滤条件：1.评委会   2.级别
+	
+	
+	$sql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp = $spec_sql ORDER BY c.specgrp ASC";
+//	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql, 50);
+	while ($data = db_fetch_object($result)) {
+		
+		$spec = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code=".$data->specgrp." OR code=".($data->specgrp-100)));
+		$specgrp = $data->specgrp;
+		$edit = l('成果及附件查看', 'conference/applicant/' . $data->id . '/achmentview') ;
+		$rows[] = array('data' =>
+				array(
+						$data->code,
+						$data->name,
+						$spec['name'],
+						$data->level=='01'?'高级':'中级',
+						$data->dspec,
+						$data->class,
+						$data->dbresult,
+						$data->pgresult,					
+						$edit
+				)
+		);
+	}
+	
+	if (!$rows) {
+		$rows[] = array(array('data' => t('无参评人员信息。'), 'colspan' => 4));
+		drupal_set_title('未选择评委会或未存入参评人员信息！');
+	}
+	else{
+		drupal_set_title('"'.$specgrp_name.'"评委会&nbsp;&nbsp;&nbsp;参评人员信息');
+	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	//docheck();
+	return $output;
+}
+
+
+function conference_applicant_form(&$form_state, $edit = array()){	
+	
+	$form['register'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('人员信息'),
+			'#collapsible' => TRUE,
+			'#weight' => -8,
+	);
+	
+	//$organization = conference_register_get_organization();
+	
+	//姓名，性别，职务，联系方式，email，个人近照（附件上传），	
+	//包括：姓名、性别、民族、部门职务、联系电话、Email、相片。没有相片也可以提交登记。
+	$form['register']['code'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('人员编码'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['code'])?$edit['code'] :'',
+			  //'#weight' => -7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  '#required' => TRUE
+	);
+	
+	$form['register']['name'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('姓名'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['name'])?$edit['name'] :'',
+			  //'#weight' => 0,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  '#required' => TRUE
+	);
+	
+	$form['register']['card_id'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('身份证号'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['card_id'])?$edit['card_id'] :'',
+			  //'#weight' => 1,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['sex'] = array(
+	          '#type' => 'radios', 
+	          '#title' => t('性别'),
+	          '#default_value' => isset($edit['sex'])?$edit['sex'] :'', 
+	          '#options' => array( 'Y' => '男', 'N' => '女'),
+		      //'#weight' => 2,
+			  '#attributes' =>array('readonly '=>'readonly'),
+		      '#required' => TRUE
+	);
+	
+	$form['register']['birthdate'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('出生日期'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['birthdate'])?$edit['birthdate'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['company'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('工作单位'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['company'])?$edit['company'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['owner'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('单位性质'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['owner'])?$edit['owner'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['level'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('评审级别'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['level'])?$edit['level'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['specgrp'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('评委会编号'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['specgrp'])?$edit['specgrp'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['class'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('申报类型'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['class'])?$edit['class'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['graddate1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('毕业时间'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['graddate1'])?$edit['graddate1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['college1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('毕业学校'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['college1'])?$edit['college1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['sspec1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('所学专业'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['sspec1'])?$edit['sspec1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['educ1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('学历'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['educ1'])?$edit['educ1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['graddate2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('毕业时间'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['graddate2'])?$edit['graddate2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['college2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('毕业学校'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['college2'])?$edit['college2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['sspec2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('所学专业'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['sspec2'])?$edit['sspec2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['educ2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('学历'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['educ2'])?$edit['educ2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['dspec'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('从事专业'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['dspec'])?$edit['dspec'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['dage'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('专业年限'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['dage'])?$edit['dage'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['oproff1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('现任职务'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['oproff1'])?$edit['oproff1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['total1'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('任职年限'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['total1'])?$edit['total1'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['oproff2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('现任职务2'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['oproff2'])?$edit['oproff2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['total2'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('任职年限2'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['total2'])?$edit['total2'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+// nproff  &  nproff1	
+	
+	$form['register']['excellent'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核优秀次数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['excellent'])?$edit['excellent'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['good'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核称职次数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['good'])?$edit['good'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['pass'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核基本称职次数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['pass'])?$edit['pass'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['english'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('英语考试成绩'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['english'])?$edit['english'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['computer'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('计算机考试成绩'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['computer'])?$edit['computer'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['reeduc'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('继续教育考试成绩'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['reeduc'])?$edit['reeduc'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['pgresult'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('破格结果'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['pgresult'])?$edit['pgresult'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['pginput'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('破格结果输入人员编号'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['pginput'])?$edit['pginput'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['dbresult'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('答辩结果'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['dbresult'])?$edit['dbresult'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['dbinput'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('答辩结果输入人员编号'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['dbinput'])?$edit['dbinput'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['pwno'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('评委数量'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['pwno'])?$edit['pwno'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['passno'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('赞成票数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['passno'])?$edit['passno'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['failno'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('反对票数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['failno'])?$edit['failno'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['noneno'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('弃权票数'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['noneno'])?$edit['noneno'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['tpresult'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('投票结果'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['tpresult'])?$edit['tpresult'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['tpinput'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('工作人员编号'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['tpinput'])?$edit['tpinput'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['political'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('政治面貌'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['political'])?$edit['political'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['post'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('行政职务'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['post'])?$edit['post'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['resume'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('从事专业工作简历'),	
+		      '#default_value' => isset($edit['resume'])?$edit['resume'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_one'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核年度1'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['assess_year_one'])?$edit['assess_year_one'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_one_result'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('考核结果1'),	
+		      '#default_value' => isset($edit['assess_year_one_result'])?$edit['assess_year_one_result'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_two'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核年度2'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['assess_year_two'])?$edit['assess_year_two'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_two_result'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('考核结果2'),	
+		      '#default_value' => isset($edit['assess_year_two_result'])?$edit['assess_year_two_result'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_three'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核年度3'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['assess_year_three'])?$edit['assess_year_three'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_three_result'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('考核结果3'),	
+		      '#default_value' => isset($edit['assess_year_three_result'])?$edit['assess_year_three_result'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_four'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核年度4'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['assess_year_four'])?$edit['assess_year_four'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_four_result'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('考核结果4'),	
+		      '#default_value' => isset($edit['assess_year_four_result'])?$edit['assess_year_four_result'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_five'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('考核年度5'),
+			  '#size' => 80,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['assess_year_five'])?$edit['assess_year_five'] :'',
+			  //'#weight' => 3,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['assess_year_five_result'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('考核结果5'),	
+		      '#default_value' => isset($edit['assess_year_five_result'])?$edit['assess_year_five_result'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['education_and_train'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('继续教育培训及进修情况'),	
+		      '#default_value' => isset($edit['education_and_train'])?$edit['education_and_train'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['achievement'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('任现职以来主要业绩与成果'),	
+		      '#default_value' => isset($edit['achievement'])?$edit['achievement'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['publication'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('任现职以来在何时和刊物发表论文、论著或技术报告'),	
+		      '#default_value' => isset($edit['publication'])?$edit['publication'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	$form['register']['award'] = array(	
+		      '#type' => 'textarea',	
+		      '#title' => t('成果获奖极受表彰情况'),	
+		      '#default_value' => isset($edit['award'])?$edit['award'] :'',	
+		      '#cols' => 80, 
+		      '#rows' => 3,
+		      //'#weight' => 7,
+			  '#attributes' =>array('readonly '=>'readonly'),
+			  //'#required' => TRUE
+	);
+	
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$form['register']['id'] = array('#type' => 'hidden', '#value' => $edit['id']);
+	}
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#weight' => 8,
+			'#submit'   => array('conference_applicant_form_submit'),
+	);
+	
+	$form['cancel'] = array(
+			'#type' => 'submit',
+			'#value' => t('Cancel'),
+			'#weight' => 10,
+			'#submit'   => array('conference_register_canel_submit'),
+	);	
+	
+/*
+
+	$form['#attributes']['enctype'] = 'multipart/form-data';
+	
+	$form['#after_build'][] = 'conference_register_form_after_build';
+	
+*/
+	return $form;
+
+}
+
+//-----CCX
+function conference_applicant_form_submit($form, &$form_state) {
+
+	global $user;
+	
+	$edit = &$form_state['values'];
+
+	$node = new stdClass();	
+
+	//$node->id = $edit['id'];
+	
+	foreach ($edit as $key => $value){
+		$node->$key = $value;
+	}
+	$node->timestamp = time();
+	if(isset($edit['id']) && is_numeric($edit['id'])){
+		$node->id = $edit['id'];
+		drupal_write_record('conference_applicant', $node, array('id'));
+		drupal_set_message('成功修改受评人员信息.');
+	}
+	else{
+		drupal_write_record('conference_applicant', $node);
+		drupal_set_message('成功添加受评人员信息.');
+	}	
+	
+	$form_state['redirect'] = 'conference';
+}
+/*
+ * 测试结果录入
+ */
+function conference_test_form(&$form_state, $edit = array()){	
+	
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_js($path .'/js/gky.js');
+	drupal_add_css($path .'/css/gky.css');
+	
+	$form['choose'] = array(
+			'#type' => 'fieldset',
+			//'#title' => t('选择人员'), 
+			//'#attributes' =>array('class'=>'testform'),
+			'#weight' => -9,
+	);
+	
+	$form['choose']['examinee'] = array(
+			'#id' =>'t_examinee',
+			'#type' => 'select',
+			'#size' => '10',
+			'#style' => 'width:200px;',
+			'#title' => t('选择人员'),
+			'#options' => conference_test_getinfo(),
+			'#weight' => -5,
+			'#required' => TRUE
+	);
+	
+	$form['choose']['year'] = array(
+			  '#type' => 'hidden',
+			  '#title' => t('考核年份'),
+			  '#size' => 30,
+			  '#maxlength' => 255,
+		      '#value' => date('Y'),
+			  //'#weight' => 3,
+			  '#required' => TRUE
+	);
+	
+	$form['choose']['dbresult'] = array(
+	          '#type' => 'radios', 
+	          '#title' => t('测试结果'),
+	          '#default_value' => isset($edit['dbresult'])?$edit['dbresult'] :'', 
+	          '#options' => array( 'T' => '通过', 'F' => '未通过'),
+		      //'#weight' => 2,
+		      '#required' => TRUE
+	);
+	
+	$form['choose']['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#submit'   => array('conference_test_form_submit'),
+	);
+
+	if(!conference_test_getinfo()) drupal_set_message('本评委会人员的测试信息已全部录入！');
+	return $form;
+}
+
+function conference_test_form_submit($form, &$form_state){
+	$edit = &$form_state['values'];
+	$node = new stdClass();
+	foreach ($edit as $key => $value){
+		$node->$key = $value;
+	}
+	if($node->dbresult=='F') $dbresult='F';
+	else $dbresult=$node->year;
+	$sql = "UPDATE {conference_applicant} SET dbresult='".$dbresult."' WHERE code='".$node->examinee."'";
+	$update = db_query($sql);
+	if($update) drupal_set_message('测试结果录入成功！');
+	else drupal_set_message($sql.'测试结果录入失败！');
+	$form_state['redirect'] = 'conference/applicant/test';
+}
+
+
+function conference_test_getinfo(){
+	//----
+	$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+	$result = db_query($sql);
+	$spec_sql='';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		if($s_result['specgrp'] < 200){
+			$midspecgrp = $s_result['specgrp']+100;
+			switch($s_result['level']){
+				case 1 : $specgrp = $s_result['specgrp'];break;//1-高级   2-中级  3-高+中
+				case 2 : $specgrp = $s_result['specgrp'];break;
+				case 3 : $specgrp = $s_result['specgrp']." OR specgrp = ".$midspecgrp;break;
+			}
+		}
+		else $specgrp=$s_result['specgrp'];
+		
+		if($spec_sql=='') $spec_sql.=$specgrp;
+		else $spec_sql.=" OR specgrp=".$specgrp;
+	}
+	//-------处理过滤条件：1.评委会   2.级别
+	$sql = "SELECT code,name FROM {conference_applicant} c WHERE noeduc = '01' AND dbresult = '' AND (specgrp = $spec_sql)";
+	$result = db_query($sql);
+	$name = array();
+	while($data = db_fetch_object($result)){
+		$name[$data->code] = $data->name;
+	}
+	return $name;
+	exit;
+}
+
+/*
+ * 评委会管理
+ */
+
+function conference_expert_panel_overview() {
+	global $user;
+
+	$header = array(
+			array('data' => t('评委会名称'), 'field' => 'assess_number','width' =>'5%'),
+			array('data' => t('参评人数'), 'field' => 'assess_number','width' =>'5%'),
+			array('data' => t('评委人数'), 'field' => 'expert_number','width' =>'5%'),
+			array('data' => t('工作人员'), 'field' => 'staff','width' =>'5%'),
+			array('data' => t('主任评委'), 'field' => 'senior_expert','width' =>'5%'),
+			array('data' => t('评审状态'), 'field' => 'pgresult','width' =>'5%'),
+			array('data' => t('编辑'),'width' =>'5%')
+	);
+
+	$sql = "SELECT c.* FROM {conference_baseinfo} c";
+	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql. $tablesort , 50);
+	while ($data = db_fetch_object($result)) {
+		if($data->status==1) {
+			$status = '开启';
+			$edit = l('修改', 'conference/expert_panel/'.$data->id.'/edit').'&nbsp;&nbsp;'.l('关闭','/') ;
+		}
+		else {
+			$status = '关闭';
+			$edit = l('修改', 'conference/expert_panel/'.$data->id.'/edit').'&nbsp;&nbsp;'.l('开启','conference/expert_panel/'.$data->id.'/start') ;
+		}
+		$sql_s = "SELECT name FROM {users} WHERE uid=$data->staff";
+		$result_s = db_fetch_array(db_query($sql_s));
+		$staff = $result_s['name'];
+		$rows[] = array('data' =>
+				array(
+						$data->conference_name,
+						$data->assess_number,
+						$data->expert_number,
+						$staff,
+						$data->senior_expert,
+						$status,
+						$edit
+				)
+		);
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('还没有添加评委会信息。'), 'colspan' => 4));
+		drupal_set_title('还没有添加评委会信息');
+	}
+	else{
+	//	$num = conference_get_participant_number();
+	//	drupal_set_title('贵单位已经上传'.$num .'名参会人员信息');
+	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+
+	return $output;
+}
+
+function conference_expert_panel_list(){
+
+	global $user;
+	
+	$header = array(
+			array('data' => t('评委会名称'), 'field' => 'conference_name','width' =>'5%'),
+			array('data' => t('评审日期'), 'field' => 'date','width' =>'5%'),
+			array('data' => t('工作人员'), 'field' => 'staff','width' =>'5%'),
+			array('data' => t('状态'), 'field' => 'status','width' =>'5%'),
+			array('data' => t('操作'),'width' =>'15%')
+	);
+
+	$sql = "SELECT * FROM {conference_baseinfo}  ORDER BY `status` DESC";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$edit = l('编辑', 'conference/expert_panel/' . $data->id . '/edit').'&nbsp;&nbsp;'.l('删除', 'conference/expert_panel/' . $data->id . '/delete') ;
+		$rows[] = array('data' =>
+				array(
+						$data->conference_name,
+						$data->timestamp,
+						$data->staff,
+						$data->status?'评审中':'未激活',
+						$edit
+				)
+		);
+	}
+	
+	if (!$rows) {
+		$rows[] = array(array('data' => t('无评委会信息。').l('点击添加评委会', 'conference/expert_panel/add'), 'colspan' => 4));
+		drupal_set_title('未添加评委会！');
+	}
+	else{
+		drupal_set_title('评委会列表');
+	}
+	
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+	
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	return $output;
+}
+
+function conference_expert_panel_edit($baseinfo){
+	global $user;
+	$header = array(
+			array('data' => t('分组名称'), 'field' => 'conference_name','width' =>'5%'),
+			//array('data' => t('参评人数'), 'field' => 'date','width' =>'5%'),
+			array('data' => t('评审专家'), 'field' => 'staff','width' =>'20%'),
+			array('data' => t('评审专业'), 'field' => 'status','width' =>'20%'),
+			array('data' => t('操作'),'width' =>'5%')
+	);
+
+	$sql = "SELECT * FROM {conference_baseinfo_group}";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$edit = l('删除', 'conference/expert_panel/' . $data->id . '/delete') ;
+		
+		$expert_number = split ('[,]', $data->expert);
+		$expert = '';
+		foreach ($expert_number as $key => $value){
+			if($value){
+				$expert_name = db_fetch_array(db_query("SELECT name FROM {conference_expert} WHERE id = $value"));
+				$expert .= $expert_name['name'].',';
+			}
+		}
+		$expert = substr($expert, 0, -1);
+		
+		$specgrp_number = split ('[,]', $data->specgrp);
+		$specgrp = '';
+		foreach ($specgrp_number as $key => $value){
+			if($value){
+				$specgrp_name = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code+100 = $value"));
+				if($specgrp_name) $specgrp .= $specgrp_name['name'].'(中级),';
+				$specgrp_name = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code = $value"));
+				if($specgrp_name) $specgrp .= $specgrp_name['name'].'(高级),';				
+			}
+		}
+		$specgrp = substr($specgrp, 0, -1);
+		
+		$rows[] = array('data' =>
+				array(
+						$data->name,
+						$expert,
+						$specgrp,
+						$edit
+				)
+		);
+	}
+	
+	if (!$rows) {
+		$rows[] = array(array('data' => t('无分组信息。'), 'colspan' => 5));
+		drupal_set_title('无分组信息！');
+	}
+	else{
+		drupal_set_title('分组列表');
+	}
+	
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+	drupal_add_css($path .'/css/group.css');
+	
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	$output .= drupal_get_form('conference_expert_group_form',$baseinfo['id']);
+	return $output;
+}
+
+
+function conference_expert_group_form(&$form_state, $edit = array()){
+	$form['group'] = array(
+			'#title' => t('新建分组'),
+			'#type' => 'fieldset',
+			'#weight' => -8,
+	);
+	
+	$form['group']['name'] = array(
+			'#title' => t('分组名称'),
+			'#type' => 'textfield',
+			'#size' => 50,
+			'#maxlength' => 255,
+			'#default_value' => '',
+			//'#weight' => -7,
+			//'#required' => TRUE
+	);
+	
+
+	$form['group']['specgrp'] = array(
+			'#type' => 'checkboxes',
+			'#title' => t('选择评审专业'), 
+			'#options' => conference_get_specgrp(),
+			'#size' => 10,
+			'#required' => TRUE
+		);
+
+	$form['group']['expert'] = array(
+			'#type' => 'checkboxes',
+			'#title' => t('评审专家选择'),
+			'#attributes' => array('class' => 'test'),
+			'#options' => conference_get_expert(),
+			'#size' => 10,
+			'#required' => TRUE
+		);
+
+	$form['bid'] = array(
+			'#type' => 'hidden',
+			'#default_value' => $edit,
+		);
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#weight' => 8,
+			'#submit' => array('conference_expert_group_form_submit'),
+	);
+	return $form;
+
+}
+
+function conference_expert_group_form_submit($form, &$form_state) {
+	$edit = &$form_state['values'];
+	$node = new stdClass();
+	
+ 	foreach ($edit as $key => $value){
+ 		if($key!='expert'&&$key!='specgrp') $node->$key = trim($value);
+ 	}
+ 	$node->expert = '';
+ 	$node->specgrp = '';
+ 	foreach ($edit['expert'] as $key => $value){
+ 		if($value) $node->expert .= $key.',';
+ 	}
+ 	foreach ($edit['specgrp'] as $key => $value){
+ 		if($value) $node->specgrp .= $key.',';
+ 	}
+ 	$test = split ('[,]', $node->expert);
+//  	if(isset($edit['id']) && is_numeric($edit['id'])){
+//  		drupal_write_record('conference_baseinfo', $node, array('id'));
+//  	}
+//  	else{
+  		drupal_write_record('conference_baseinfo_group', $node);
+//  	}
+	drupal_set_message('创建分组成功！');
+ 	$form_state['redirect'] = 'conference/expert_panel/'.$edit['bid'].'/edit';
+}
+
+function conference_expert_panel_form(&$form_state, $edit = array()){	
+	global $user;
+	$form['panel'] = array(
+			'#type' => 'fieldset',
+			'#weight' => -8,
+	);
+// 	$form['panel']['specgrp'] = array(
+// 			'#type' => 'select',	
+// 			'#title' => t('添加评委会'),
+// 			'#default_value' => isset($edit['specgrp'])?$edit['specgrp'] :'',
+// 			'#options' => conference_register_get_specgrp(),
+// 			'#multiple' => 'multiple',
+// 			'#size' => 10,
+// 			'#weight' => -7,
+// 			'#required' => TRUE
+// 	);
+	
+// 	if($edit['level']==1) $level= array('1'=>1,'2'=>0);
+// 	elseif($edit['level']==2) $level= array('1'=>0,'2'=>2);
+// 	elseif($edit['level']==3) $level= array('1'=>1,'2'=>2);
+	
+// 	$form['panel']['level'] = array(
+// 	          '#title' => t('评审级别'),
+// 	          '#type' => 'checkboxes', 
+// 			  //'#default_value' => $level, 
+// 	          '#options' => array( '2' => '中级', '1' => '高级'),
+// 		      //'#weight' => 2,
+// 		      '#required' => TRUE
+// 	);
+	
+	/*
+	$form['panel']['conference_name'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('评委会名称'),
+			  '#size' => 50,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['conference_name'])?$edit['conference_name'] :'',
+			  //'#weight' => -7,
+			  '#required' => TRUE
+	);
+	*//*
+	$form['panel']['timestamp'] = array(
+			  '#type' => 'textfield',
+			  '#title' => t('评审时间'),
+			  '#size' => 50,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['timestamp'])?$edit['timestamp'] :'',
+			  //'#weight' => -7,
+			  //'#required' => TRUE
+	);
+	*/
+	$form['panel']['conference_name'] = array(
+			  '#title' => t('评审会名称'),
+			  '#type' => 'textfield',
+			  '#size' => 50,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['name'])?$edit['name'] :'',
+			  //'#weight' => -7,
+			  //'#required' => TRUE
+	);
+	
+	$form['panel']['location'] = array(
+			  '#title' => t('评审地点'),
+			  '#type' => 'textfield',
+			  '#size' => 50,
+			  '#maxlength' => 255,
+		      '#default_value' => isset($edit['location'])?$edit['location'] :'',
+			  //'#weight' => -7,
+			  //'#required' => TRUE
+	);
+	
+	$form['panel']['staff'] = array(
+			  '#type' => 'hidden',
+			  '#title' => t('工作人员'),
+			  '#size' => 50,
+			  '#maxlength' => 255,
+		      '#value' => $user->uid ,
+	);
+	
+	$form['id'] = array(
+			'#type' => 'hidden',
+			'#value' => isset($edit['id'])?$edit['id'] :'',
+	);
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit'),
+			'#weight' => 8,
+			'#submit'   => array('conference_expert_panel_form_submit'),
+	);
+/*
+
+	$form['#attributes']['enctype'] = 'multipart/form-data';
+	
+	$form['#after_build'][] = 'conference_register_form_after_build';
+	
+*/
+	return $form;
+
+}
+
+
+function conference_expert_panel_form_submit($form, &$form_state) {
+	$edit = &$form_state['values'];
+	$node = new stdClass();
+
+	$node->status = 0;
+	
+	foreach ($edit as $key => $value){
+		$node->$key = trim($value);
+	}
+	$node->timestamp = date('Y-m-d');
+	//dvm($node->assess_number);
+	
+	
+ 	if(isset($edit['id']) && is_numeric($edit['id'])){
+ 		drupal_write_record('conference_baseinfo', $node, array('id'));
+ 	}
+ 	else{
+// // 		$sql = "UPDATE conference_baseinfo SET status=0";
+// // 		db_query($sql);
+ 		$result = drupal_write_record('conference_baseinfo', $node);
+ 	}
+	drupal_set_message('评委会选择成功！');
+	$form_state['redirect'] = 'conference/applicant';
+}
+
+/*
+ * XML文件的生成
+ */
+
+function conference_applicant_export_xml() {
+	
+	$pwname = $_GET['pwid'];//评委id
+	$type = $_GET['type'];//评委id
+	if($type==0){
+		$sql = "SELECT * FROM {conference_baseinfo} WHERE id=(SELECT specgrp FROM {conference_expert} WHERE name='".$pwname."')";
+		$result = db_query("SELECT * FROM {conference_baseinfo} WHERE id=(SELECT specgrp FROM {conference_expert} WHERE name='".$pwname."')");
+		$s_result = db_fetch_array($result);
+		$specgrp = $s_result['specgrp'];
+		if($s_result['specgrp'] < 200){
+			$midspecgrp = $s_result['specgrp']+100;
+			switch($s_result['level']){
+				case 1 : $specgrp = $s_result['specgrp'];break;//1-高级   2-中级  3-高+中
+				case 2 : $specgrp = $midspecgrp;break;
+				case 3 : $specgrp = $s_result['specgrp']." OR specgrp = ".$midspecgrp;break;
+				}
+			}
+		$psql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp = $specgrp ORDER BY c.specgrp ASC";
+		
+		$presult = db_query($psql);
+		$items = '';
+		while ($applicant = db_fetch_object($presult)) {
+		handleapplicant($applicant);
+		$items .= theme('conference_applicant', $applicant);
+		}
+		$getinfo = new stdClass();
+		$getinfo->name = '';
+		$getinfo->id = '';
+		$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+		$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\">";
+		$output .= $items;
+		$output .= "</root>\n";	
+	}
+	else{
+		//----
+		$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+		$result = db_query($sql);
+		$spec_sql='';//处理后查询人的评委会id
+		$assess = 0;
+		while($s_result = db_fetch_array($result)){
+			$assess+=$s_result['assess_number'];
+			if($s_result['specgrp'] < 200){
+				$midspecgrp = $s_result['specgrp']+100;
+				switch($s_result['level']){
+					case 1 : $specgrp = $s_result['specgrp'];break;//1-高级   2-中级  3-高+中
+					case 2 : $specgrp = $s_result['specgrp'];break;
+					case 3 : $specgrp = $s_result['specgrp']." OR specgrp = ".$midspecgrp;break;
+				}
+			}
+			else $specgrp=$s_result['specgrp'];
+		
+			if($spec_sql=='') $spec_sql.=$specgrp;
+			else $spec_sql.=" OR specgrp=".$specgrp;
+		}
+		//-------处理过滤条件：1.评委会   2.级别
+			$num = db_query("SELECT COUNT(*) AS num FROM {conference_applicant} c WHERE (specgrp = $spec_sql) AND bjtype<>''");
+			$result = db_fetch_array($num);
+			if($result['num']==$assess){
+				$psql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp = $spec_sql ORDER BY c.specgrp ASC";
+				$presult = db_query($psql);
+	
+				while ($applicant = db_fetch_object($presult)) {
+					handleapplicant($applicant);
+					$items .= theme('conference_applicant', $applicant);
+				}
+				
+				$getinfo = new stdClass();
+				$getinfo->name = '';
+				$getinfo->id = '';
+				$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+				$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\">";
+				$output .= $items;
+				$output .= "</root>\n";	
+			}
+			else $output='';
+		}
+		
+	//return '';
+	print($output);
+	exit();
+}
+
+function handleapplicant($applicant){
+	
+		$fsql = "SELECT d.* FROM {conference_applicant_achievement} d WHERE d.code = $applicant->code ";
+		$fresult = db_query($fsql);
+		
+		
+		$cg_name = array();
+		$cg_author_order = array();
+		$cg_timestamp = array();
+		$cg_description = array();
+		$cg_filepath = array();
+		
+		$lw_name = array();
+		$lw_timestamp = array();
+		$lw_author_order = array();
+		$lw_filepath = array();
+		
+		$hj_name = array();
+		$hj_timestamp = array();
+		$hj_filepath = array();
+		
+		$xl_name = array();
+		$xl_timestamp = array();
+		$xl_filepath = array();
+		
+		while($achievement = db_fetch_object($fresult)){
+			switch ($achievement->type){
+				
+			case '成果': 
+				$cg_name[] = $achievement->name;
+				$cg_author_order[] = $achievement->author_order;
+				$cg_timestamp[] = $achievement->timestamp;
+				$cg_description[] = $achievement->description;
+				$cg_filepath[] = $achievement->filepath;
+				break;
+				
+			case '论文': 
+				$lw_name[] = $achievement->name;
+				$lw_author_order[] = $achievement->author_order;
+				$lw_timestamp[] = $achievement->timestamp;
+				$lw_filepath[] = $achievement->filepath;
+				break;
+				
+			case '获奖': 
+				$hj_name[] = $achievement->name;
+				$hj_timestamp[] = $achievement->timestamp;
+				$hj_filepath[] = $achievement->filepath;
+				break;
+				
+			case '学历':
+				$xl_name[] = $achievement->name;
+				$xl_timestamp[] = $achievement->timestamp;
+				$xl_filepath[] = $achievement->filepath;
+				
+			default: break;
+			}
+		}
+		
+		$spec = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code=".$applicant->specgrp." OR code=".($applicant->specgrp-100)));
+		$applicant->specgrp = $spec['name'];
+		
+		$applicant->cg_name = implode('|',$cg_name);
+		$applicant->cg_name = rpword($applicant->cg_name);
+		$applicant->cg_author_order = implode('|',$cg_author_order);
+		$applicant->cg_timestamp = implode('|',$cg_timestamp);
+		$applicant->cg_description = implode('|',$cg_description);
+		$applicant->cg_filepath = implode('|',$cg_filepath);
+		
+		$applicant->lw_name = implode('|',$lw_name);
+		$applicant->lw_author_order = implode('|',$lw_author_order);
+		$applicant->lw_timestamp = implode('|',$lw_timestamp);
+		$applicant->lw_filepath = implode('|',$lw_filepath);
+		
+		$applicant->hj_name = implode('|',$hj_name);
+		$applicant->hj_timestamp = implode('|',$hj_timestamp);
+		$applicant->hj_filepath = implode('|',$hj_filepath);
+		
+		$applicant->xl_name = implode('|',$xl_name);
+		$applicant->xl_timestamp = implode('|',$xl_timestamp);
+		$applicant->xl_filepath = implode('|',$xl_filepath);
+		
+		
+		$applicant->level = $applicant->level=='01'?'高级':'中级';
+		$applicant->computer = performance($per = array($applicant->computer,computer));
+		$applicant->english = performance($per = array($applicant->english,english));
+		$applicant->dspec = performance($per = array($applicant->dspec,dspec));
+		$applicant->sex = ($applicant->sex == 'Y')?'男':'女';
+		switch($applicant->educ1){
+			case '01':$applicant->educ1='博士';break;
+			case '02':$applicant->educ1='硕士';break;
+			case '03':$applicant->educ1='研究生';break;
+			case '04':$applicant->educ1='双学士';break;
+			case '05':$applicant->educ1='学士';break;
+			case '06':$applicant->educ1='大学本科';break;
+			case '07':$applicant->educ1='大专';break;
+			case '08':$applicant->educ1='中专';break;
+			case '09':$applicant->educ1='高中';break;
+			case '10':$applicant->educ1='技校';break;
+			case '11':$applicant->educ1='其他';break;
+			default:break;
+		}		
+		switch($applicant->educ2){
+			case '01':$applicant->educ2='博士';break;
+			case '02':$applicant->educ2='硕士';break;
+			case '03':$applicant->educ2='研究生';break;
+			case '04':$applicant->educ2='双学士';break;
+			case '05':$applicant->educ2='学士';break;
+			case '06':$applicant->educ2='大学本科';break;
+			case '07':$applicant->educ2='大专';break;
+			case '08':$applicant->educ2='中专';break;
+			case '09':$applicant->educ2='高中';break;
+			case '10':$applicant->educ2='技校';break;
+			case '11':$applicant->educ2='其他';break;
+			default:break;
+		}
+		//return $user->card_id;
+		//dvm($applicant);
+		
+		
+		foreach ($applicant AS $key=>$value){//处理所有的 <  >  "
+			$applicant->$key = rpword($value);
+		}
+}
+
+function performance($value = array()){
+	$code = $value[0];
+	$type = $value[1];
+	if($type == 'dspec'){
+		$sql = "SELECT * FROM {conference_spefield} WHERE code = '".$code."'" ;
+		$result = db_query($sql);
+		$data = db_fetch_array($result);
+		$name = $data['name'];
+	}
+	else {
+		$sql = "SELECT * FROM {conference_performance} WHERE code = '".$code."' AND type = '".$type."'" ;
+		$result = db_query($sql);
+		$data = db_fetch_array($result);
+		$name = $data['name'];
+	}
+	return $name;
+}
+
+function rpword($str){
+		$str=str_replace('&',"&amp;",$str);
+		$str=str_replace('<',"&lt;",$str);
+		$str=str_replace('>',"&gt;",$str);
+		$str=str_replace('"',"&quot;",$str);
+		//$str=str_replace('—',"--",$str);
+		return $str;
+}
+/*
+ * hook_theme
+ */
+
+function conference_applicant_theme() {
+	return array(
+			'conference_applicant' => array(
+					'template' => 'tpl/conference-applicant-info',
+					'arguments' => array('applicant'=>null),
+			),
+		);
+}
+
+
+function conference_get_specgrp($id = null) {
+	/*
+	 * 获取当前所有参评人员的评委会，由于有中高级之分，所以如果 评委会code=人员.specgrp-100也符合
+	 * 特殊情况为 134 经济符合型  与  234 建筑材料  并不是中高级的区别
+	 */
+	$specgrp = array();
+// 	$sql = "SELECT * FROM conference_specgrp";
+	$sql = "SELECT DISTINCT s.`name`,s.`code`,a.`specgrp` FROM conference_specgrp s INNER JOIN conference_applicant a ON (s.`code`=a.specgrp-100)";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$specgrp[$data->specgrp] = $data->name.'(中级)';
+	}
+	$sql = "SELECT DISTINCT s.`name`,s.`code`,a.`specgrp` FROM conference_specgrp s INNER JOIN conference_applicant a ON (s.`code`=a.specgrp)";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$specgrp[$data->specgrp] = $data->name.'(高级)';
+	}
+	if($id) {
+		return $specgrp[$id];
+	}
+	else{
+		return $specgrp;
+	}
+}
+
+
+function conference_get_expert($id = null) {
+	$expert = array();
+// 	$sql = "SELECT * FROM conference_specgrp";
+	$sql = "SELECT * FROM conference_expert";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$expert[$data->id] = $data->name;
+	}
+	if($id) {
+		return $expert[$id];
+	}
+	else{
+		return $expert;
+	}
+}
+
+function docheck(){
+	$sql = "SELECT * FROM {conference_baseinfo} WHERE status = '1'";
+	$result = db_query($sql);
+	$spec_sql='';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		$specgrp=$s_result['id'];
+		if($spec_sql=='') $spec_sql.=$specgrp;
+		else $spec_sql.=" OR specgrp=".$specgrp;
+	}
+	$sql = "SELECT * FROM {conference_expert} WHERE specgrp = $spec_sql";
+	$result = db_query($sql);
+	$pw = db_fetch_array($result);
+	
+	if(conference_test_getinfo()) {
+		drupal_set_message('有参评人员测试结果未录入！');
+	}
+	if(!$pw){
+		drupal_set_message('本评委会未选择评委！');
+	}
+}

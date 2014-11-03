@@ -1,0 +1,5 @@
+name = "Conference expert score"
+description = "评审进度"
+core = 6.x
+
+package = "Conference"

@@ -1,0 +1,84 @@
+
+
+Drupal.behaviors.registerAdminBehavior = function (context) {
+	
+	$('.delete-register',context).bind('click',function(e){
+		//deleteParticipant(this);
+		   var id = $(this).attr("id");
+		   var parent = $(this).parent().parent(); 
+		   var name = parent.find("td:first-child").text();
+		   jConfirm('确定删除参会人员 '+ name +' ？', '温馨提示', function(r) {		
+	           if(r == true){ 
+					$.ajax({
+					      type: "POST",		    
+					      url: "/deleteParticipant.json",	
+					      success: function (data) { 					      	
+					      	if(data.status == true){ 
+					      	  var num = data.num;
+					      	  if(num > 0){
+					      		$('h1.title').html('贵单位已经上传'+ num +'名参会人员信息');	  
+					      	  }
+					      	  else{
+					      		$('h1.title').html('贵单位还没有上传参会人员信息');	  
+					      	  }	
+					      	  parent.remove();
+					      	}
+					      },
+					      dataType: 'json', 
+					      data: {id: id}
+					});	 	        	        	   
+	           } 	           	    	
+			});
+		    
+		    e.preventDefault();	
+	   }	
+	);  
+	
+	$('.delete-document',context).bind('click',function(e){		
+		   var id = $(this).attr("id");
+		   var parent = $(this).parent().parent(); 
+		   var name = parent.find("td:first-child").text();
+		   jConfirm('确定删除参会资料 '+ name +' ？', '温馨提示', function(r) {		
+	           if(r == true){ 
+					$.ajax({
+					      type: "POST",		    
+					      url: "/deleteDocument.json",	
+					      success: function (data) { 					      	
+					      	if(data.status == true){ 					      	  
+					      	  parent.remove();
+					      	}
+					      },
+					      dataType: 'json', 
+					      data: {id: id}
+					});			        	        	   
+	           } 	           	    	
+			});
+		    
+		    e.preventDefault();	
+	   }	
+	);  
+	
+	$('.delete-organization',context).bind('click',function(e){		
+		   var id = $(this).attr("id");
+		   var parent = $(this).parent().parent(); 
+		   var name = parent.find("td").eq(1).text();
+		   jConfirm('确定删除  '+ name +' ？', '温馨提示', function(r) {		
+	           if(r == true){ 
+					$.ajax({
+					      type: "POST",		    
+					      url: "/deleteOrganization.json",	
+					      success: function (data) { 					      	
+					      	if(data.status == true){ 					      	  
+					      	  parent.remove();
+					      	}
+					      },
+					      dataType: 'json', 
+					      data: {id: id}
+					});			        	        	   
+	           } 	           	    	
+			});
+		    e.preventDefault();	
+	   }	
+	); 	
+	
+}

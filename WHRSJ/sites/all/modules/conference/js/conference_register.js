@@ -1,0 +1,243 @@
+Drupal.behaviors.registerAdminBehavior = function(context) {
+	
+	function abc()
+	{
+	window.location.href="/blog/window.location.href";
+	setTimeout("abc()",5000);
+	} 
+	
+
+	$('.delete-register', context).bind(
+			'click',
+			function(e) {
+				// deleteParticipant(this);
+				var id = $(this).attr("id");
+				var parent = $(this).parent().parent();
+				var name = parent.find("td:first-child").text();
+				jConfirm('确定删除参会人员 ' + name + ' ？', '温馨提示', function(r) {
+					if (r == true) {
+						$.ajax({
+							type : "POST",
+							url : "/deleteParticipant.json",
+							success : function(data) {
+								if (data.status == true) {
+									var num = data.num;
+									if (num > 0) {
+										$('h1.title').html(
+												'贵单位已经上传' + num + '名参会人员信息');
+									} else {
+										$('h1.title').html('贵单位还没有上传参会人员信息');
+									}
+									parent.remove();
+								}
+							},
+							dataType : 'json',
+							data : {
+								id : id
+							}
+						});
+					}
+				});
+
+				e.preventDefault();
+			});
+
+	$('.delete-document', context).bind('click', function(e) {
+		var id = $(this).attr("id");
+		var parent = $(this).parent().parent();
+		var name = parent.find("td:first-child").text();
+		jConfirm('确定删除参会资料 ' + name + ' ？', '温馨提示', function(r) {
+			if (r == true) {
+				$.ajax({
+					type : "POST",
+					url : "/deleteDocument.json",
+					success : function(data) {
+						if (data.status == true) {
+							parent.remove();
+						}
+					},
+					dataType : 'json',
+					data : {
+						id : id
+					}
+				});
+			}
+		});
+
+		e.preventDefault();
+	});
+
+	$('.delete-organization', context).bind('click', function(e) {
+		var id = $(this).attr("id");
+		var parent = $(this).parent().parent();
+		var name = parent.find("td").eq(1).text();
+		jConfirm('确定删除  ' + name + ' ？', '温馨提示', function(r) {
+			if (r == true) {
+				$.ajax({
+					type : "POST",
+					url : "/deleteOrganization.json",
+					success : function(data) {
+						if (data.status == true) {
+							parent.remove();
+						}
+					},
+					dataType : 'json',
+					data : {
+						id : id
+					}
+				});
+			}
+		});
+		e.preventDefault();
+	});
+
+	if (document.getElementById('edit-expertlist')) {
+		/*
+		 * 动态添加按钮与新的select框
+		 */
+		var ddiv = document.createElement("div");// 先定义div框，用来调整两个按钮的位置
+		$('#edit-expertlist-wrapper').append(
+				'<div class="expertdiv" id="expertdiv"></div>');
+		var addbutton = document.createElement("input");
+		addbutton.type = "button";
+		addbutton.value = "===添加==》";
+		addbutton.id = "add_expert";
+		addbutton.setAttribute("class", "form-submit expertbt");
+		document.getElementById("expertdiv").appendChild(addbutton);
+
+		var delbutton = document.createElement("input");
+		delbutton.type = "button";
+		delbutton.value = "《==删除===";
+		delbutton.id = "delete_expert";
+		delbutton.setAttribute("class", "form-submit expertbt");
+		delbutton.setAttribute("style", "margin-top:30px");
+		document.getElementById("expertdiv").appendChild(delbutton);
+
+		var select = document.createElement("select");
+		select.size = "15";
+		select.id = "expert";
+		select.name = "expert[]";// 加[]来提交数组
+		select.multiple = "multiple";// 多选
+		document.getElementById("edit-expertlist-wrapper").appendChild(select);
+
+		$('#add_expert').click(add_expert);
+		$('#delete_expert').click(delete_expert);
+		$('#edit-expertlist option').live('dblclick', add_expert);
+		$('#expert option').live('dblclick', delete_expert);
+	}
+
+	$('#conference-expert-group-form')
+			.submit(
+					function() {// 提交时全选后一个select框以提交数据置表单
+						var expertnum = document.getElementById("expert").options.length;
+						var specgrpnum = $("input");
+						var checked = 0;// 判断专业是否选择
+						for ( var i = 0; i < specgrpnum.length; i++) {
+							if (specgrpnum[i].type == 'checkbox'
+									&& specgrpnum[i].checked == true) {
+								checked = 1;
+							}
+						}
+						if (!expertnum) {
+							jAlert('请选择分组评委', '温馨提示');
+							return false;
+						}
+						if (!checked) {
+							jAlert('请选择评审专业', '温馨提示');
+							return false;
+						}
+						for ( var i = 0; i < document.getElementById("expert").options.length; i++) {
+							document.getElementById("expert").options[i].selected = true;
+						}
+					})
+
+	/*
+	 * 评审专家 两个select框的互相导入函数
+	 */
+	function add_expert() {
+		var value = $('#edit-expertlist option:selected').val();
+		var text = $('#edit-expertlist option:selected').text();
+		if (value) {// 未选任何值时不导入，以免出现空值
+			document.getElementById("expert").options.add(new Option(text,
+					value));
+			$('#edit-expertlist option:selected').remove();
+		}
+	}
+	function delete_expert() {
+		var select = $('#expert option:selected').val();
+		if (select) {
+			for ( var i = 0; i < document.getElementById('expert').options.length; i++) {
+				if (document.getElementById('expert').options[i].selected == true) {
+					var value = document.getElementById('expert').options[i].val;
+					var text = document.getElementById('expert').options[i].text;
+					document.getElementById("edit-expertlist").options
+							.add(new Option(text, value));
+				}
+			}
+			$('#expert option:selected').remove();
+		}
+	}
+	
+	$(".ps_switch").click(function() {
+		var id = this.id;
+		var name = this.name;
+		$.ajax({
+			type : "POST",
+			url : "/switch.json",
+			success : function(data) {
+				location.reload([false]);
+			},
+			dataType : 'json',
+			data : {name : name,id : id}
+		});
+	});
+	$(".baseinfo_d").click(function() {
+		var id = this.name;
+		jConfirm('确定删除此评委会及其分组信息？', '温馨提示', function(r) {
+			if (r == true) {
+				$.ajax({
+					type : "POST",
+					url : "/baseinfo_d.json",
+					success : function(data) {
+						location.reload([false]);
+					},
+					dataType : 'json',
+					data : {id : id}
+				});
+			}
+		});
+	});
+	$(".group_d").click(function() {
+		var id = this.name;
+		jConfirm('确定删除此分组信息？', '温馨提示', function(r) {
+			if (r == true) {
+				$.ajax({
+					type : "POST",
+					url : "/group_d.json",
+					success : function(data) {
+						location.reload([false]);
+					},
+					dataType : 'json',
+					data : {id : id}
+				});
+			}
+		});
+	});
+	
+	$(".scene_d").click(function() {
+		var id = this.name;
+		jConfirm('确定删除此分组信息？', '温馨提示', function(r) {
+			if (r == true) {
+				$.ajax({
+					type : "POST",
+					url : "/scene_d.json",
+					success : function(data) {
+						location.reload([false]);
+					},
+					dataType : 'json',
+					data : {id : id}
+				});
+			}
+		});
+	});
+}

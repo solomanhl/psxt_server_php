@@ -1,0 +1,52 @@
+Drupal.behaviors.registerAdminBehavior = function (context) {
+	
+	$(document).ready(function()
+			{
+				if ($.browser.msie) {
+					$('input:checkbox').click(function () { 
+						this.blur();   
+						this.focus(); 
+					});   
+				};
+				$("#t_specgrp").change(get_examinee);
+				$("#edit-level-1").change(get_examinee);
+				$("#edit-level-2").change(get_examinee);
+			});
+	
+	function get_examinee(){
+		var specgrp = $("#t_specgrp").val();
+		var hl = $("#edit-level-1").attr("checked");
+		var ml = $("#edit-level-2").attr("checked");
+		var level = hl+ml*2;
+		if ((hl||ml)&&specgrp){
+			$.ajax({
+				type: "POST",
+				type: "POST",
+				url: "/getinfo.json",
+				success: function (data) {
+					//alert(data['sql']);
+					var e_code = data['code'];
+					var e_name = data['name'];
+					$("#t_examinee").empty();
+					for(var i=0;i<e_code.length;i++){
+						$("#t_examinee").append("<option value="+e_code[i]+">"+e_name[i]+"</option>"); 
+					}
+				},
+				dataType: 'json', 
+				data: {specgrp:specgrp,level:level}
+			});
+		}
+		else $("#t_examinee").empty();
+	}
+}
+/*
+	if(data.status == true){ 
+    	  var num = data.num;
+    	  if(num > 0){
+    		$('h1.title').html('贵单位已经上传'+ num +'名参会人员信息');	  
+    	  }
+    	  else{
+    		$('h1.title').html('贵单位还没有上传参会人员信息');	  
+    	  }	
+    	  parent.remove();
+    	}*/

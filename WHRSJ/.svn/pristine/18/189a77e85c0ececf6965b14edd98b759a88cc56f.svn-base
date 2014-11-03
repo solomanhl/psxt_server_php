@@ -1,0 +1,174 @@
+<?php
+function conference_report_menu() {
+
+	$items = array();
+
+
+	$items['conference/expert_panel/report'] = array(
+			'title' => '会议备案',
+			'page callback' => 'conference_report_list',
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 14,
+	);
+
+	$items['conference/expert_panel/%baseinfo/reportout'] = array(
+			'title' => '会议评审情况备案',
+			'page callback' => 'conference_report_reportout',
+			'access callback' => 'user_is_logged_in',
+			'page arguments' => array(2),
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 15,
+	);
+
+
+	$items['conference/expert_panel/%baseinfo/reportresult'] = array(
+			'title' => '会议表决情况备案',
+			'page callback' => 'conference_report_reportresult',
+			'access callback' => 'user_is_logged_in',
+			'page arguments' => array(2),
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 25,
+	);
+	$items['conference/expert_panel/%baseinfo/wishes'] = array(
+			'title' => '主任寄语',
+			'page callback' => 'conference_report_wishes',
+			'access callback' => 'user_is_logged_in',
+			'page arguments' => array(2),
+			//'access arguments' => array('access administration pages'),
+			'type' => MENU_LOCAL_TASK,
+			//	'type' => MENU_CALLBACK,
+			'weight' => 35,
+	);
+	return $items;
+}
+
+function baseinfo_load($id) {
+	return db_fetch_array(db_query("SELECT * FROM {conference_baseinfo} WHERE id = %d", $id));
+}
+
+
+function conference_report_reportout($baseinfo = array()){
+	$items = theme('conference_reportout', $baseinfo);
+	print $items;
+}
+
+function conference_report_reportresult($baseinfo = array()) {
+	$items = theme('conference_reportresult', $baseinfo);
+	print $items;
+}
+
+function conference_report_wishes($baseinfo){
+	$items = theme('conference_wishes', $baseinfo);
+	print $items;
+}
+
+
+function conference_report_list() {
+	$header = array(
+			array('data' => t('评委会名称'), 'field' => 'conference_name','width' =>'5%'),
+			array('data' => t('评审日期'), 'field' => 'date','width' =>'5%'),
+			array('data' => t('操作'),'width' =>'15%')
+	);
+
+	$sql = "SELECT * FROM {conference_baseinfo}";
+	$result = db_query($sql);
+	while($data = db_fetch_object($result)){
+		$specgrp = conference_get_specgrp($data->specgrp,1);
+		switch ($data->level){
+			case 1:
+				$specgrp.='(高级)';
+				break;
+			case 2:
+				$specgrp.='(中级)';
+				break;
+			case 3:
+				$specgrp.='(高级、中级)';
+				break;
+		}
+		$edit = l('会议评审情况备案', 'conference/expert_panel/'.$data->id.'/reportout').'&nbsp;&nbsp;';
+		$edit .= l('会议表决情况备案', 'conference/expert_panel/'.$data->id.'/reportresult').'&nbsp;&nbsp;';
+		$edit .= l('主任寄语', 'conference/expert_panel/'.$data->id.'/wishes');
+		$rows[] = array('data' =>
+				array(
+						$data->conference_name,
+						$data->timestamp,
+						$edit
+				)
+		);
+	}
+
+	if (!$rows) {
+		$rows[] = array(array('data' => t('无评委会信息。').l('点击添加评委会', 'conference/expert_panel/add'), 'colspan' => 4));
+		drupal_set_title('未添加评委会！');
+	}
+	else{
+		drupal_set_title('评委会列表');
+	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	$output .= theme('table', $header, $rows);
+	$output .= theme('pager', NULL, 50, 0);
+	return $output;
+}
+
+// function conference_report_reportresult2() {
+//     $sql = "select c.* from {conference_applicant} c where c.specgrp in (select specgrp from {conference_baseinfo} where status=1)";
+//     $result = db_query($sql);
+//     $data1 = db_fetch_object($result);
+// 	$sql = "SELECT c.* FROM {conference_baseinfo} c where status=1";
+// 	$result = db_query($sql);
+// 	$data = db_fetch_object($result);
+// 	switch ($data->level){
+// 		case 1 :$level = '高级'; break;
+// 		case 2 :$level = '中级'; break;
+// 		case 3 :$level = '高中级'; break;
+// 	}
+// 	drupal_set_title('武汉市'.$data->conference_name.'专业'.$level.'评委会');
+
+
+// 	//到会评委
+// 	$sql ="SELECT c.* FROM conference_expert c WHERE c.specgrp IN ( SELECT specgrp FROM conference_baseinfo WHERE status=1) and position='委员'";
+// 	$export_result = db_query($sql);
+// 	$experts =array();
+// 	$i =0;
+// 	while ($data3 = db_fetch_object($export_result)) {
+// 		$experts[$i] = $data3->name;
+// 		$i++;
+// 	}
+
+// 	$output .= theme('table', $experts, $experts);
+// 	$output .= theme('pager', NULL, 50, 0);
+// 	return $output;
+// }
+
+/*
+ * hook_theme
+*/
+
+function conference_report_theme() {
+	return array(
+			'conference_reportout' => array(
+					'template' => 'tpl/conference_reportout',
+					'arguments' => array('baseinfo'=>null),
+			),
+			'conference_reportresult' => array(
+					'template' => 'tpl/conference_reportresult',
+					'arguments' => array('baseinfo'=>null),
+			),
+			'conference_wishes' => array(
+					'template' => 'tpl/conference_wishes',
+					'arguments' => array('baseinfo'=>null),
+			),
+	);
+}
