@@ -23,24 +23,17 @@
 	$sql ="select a.* from {conference_baseinfo} a where id=%d";
 	$result = db_query($sql, $baseinfo['id']);
 	while($cnfname = db_fetch_object($result)){
-		if($cnfname->dy_level != ''){
-			$level = $cnfname->dy_level;
+		$level = $cnfname->level;
+		if($cnfname->dy_level == '3'){
+			$level = '3';
 		}
 		if($cnfname->dy_name != ''){
 			$cnfname->conference_name = $cnfname->dy_name;
 		}
+		$specgrp = $cnfname->specgrp;
 		if ($cnfname->dy_specgrp != ''){
 			$specgrp = $cnfname->dy_specgrp;
 		}
- 			$specgrp_count = '';
- 			$specgrp_count .= conference_process_specgrp_xianchang($specgrp, $level);
- 			$specgrp_count = substr($specgrp_count, 0, -1);
- 			$sql = "SELECT c.code FROM {conference_applicant} c where c.specgrp IN ($specgrp_count) AND c.tpresult = ''";
- 			$result = db_query($sql);
- 			while($data = db_fetch_array($result)){
- 				$aid = $data['code'];
- 				conference_expert_tpresult($aid,$specgrp_count);
- 			}	
 		$heightdata = null;
 		$middata = null;
 
@@ -104,7 +97,7 @@
 		<h2 style="text-align: center; margin-top: 60px;">
 			<?php echo '武汉市职称评审投票结果表';?>
 		</h2>
-		<table style="margin-top: 20px; margin-left: 20px;">
+		<table style="margin-top: 20px; margin-left: 0px;">
 			<tr>
 				<td style="width: 260px;"><?php echo '<strong>评委会：</strong>'.'<font size=-1>'.$cnfname->conference_name.'</font>'; ?>
 				</td>
@@ -114,7 +107,7 @@
 				</td>
 			</tr>
 		</table>
-		<div style="height: 720px; margin-left: 20px; width: 600px;">
+		<div style="height: 720px; margin-left: 20px; width: 660px;">
 			<table style="text-align: center;" class="tabl">
 				<tr>
 					<td style="width: 55px;" rowspan="2"><strong>序号</strong></td>
@@ -140,6 +133,7 @@
 					}
 					else{
 						?>
+						
 	<div >
 		<h2 style="text-align: center; margin-top: 60px;">
 			<?php echo '武汉市职称评审投票结果表';?>
@@ -154,7 +148,7 @@
 				</td>
 			</tr>
 		</table>
-		<div style="height: 720px; margin-left: 20px; width: 600px;">
+		<div style="height: 720px; margin-left: 20px; width: 660px;">
 			<table style="text-align: center;" class="tabl">
 				<tr>
 					<td style="width: 55px;" rowspan="2"><strong>序号</strong></td>
@@ -258,24 +252,24 @@
 				</td>
 			</tr>
 		</table>
-		<div style="height: 720px; margin-left: 20px; width: 600px;">
+		<div style="height: 880px; margin-left: 0px; width: 700px;font-size:20px">
 			<table style="text-align: center;" class="tabl">
 				<tr>
-					<td style="width: 55px;" rowspan="2"><strong>序号</strong></td>
-					<td style="width: 90px;" rowspan="2"><strong>袋&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</strong>
+					<td style="width: 65px;" rowspan="2"><strong>序号</strong></td>
+					<td style="width: 105px;" rowspan="2"><strong>袋&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</strong>
 					</td>
-					<td style="width: 75px;" rowspan="2"><strong>姓&nbsp;&nbsp;&nbsp;&nbsp;名</strong>
+					<td style="width: 85px;" rowspan="2"><strong>姓&nbsp;&nbsp;&nbsp;&nbsp;名</strong>
 					</td>
-					<td style="width: 70px; line-height: 28px;" rowspan="2"><strong>破&nbsp;&nbsp;&nbsp;格<br />结&nbsp;&nbsp;&nbsp;论
+					<td style="width: 80px; line-height: 28px;" rowspan="2"><strong>破&nbsp;&nbsp;&nbsp;格<br />结&nbsp;&nbsp;&nbsp;论
 					</strong></td>
-					<td style="width: 70px; line-height: 28px;" rowspan="2"><strong>测&nbsp;&nbsp;&nbsp;试<br />结&nbsp;&nbsp;&nbsp;果
+					<td style="width: 80px; line-height: 28px;" rowspan="2"><strong>测&nbsp;&nbsp;&nbsp;试<br />结&nbsp;&nbsp;&nbsp;果
 					</strong></td>
-					<td colspan="3" style="height: 20px;"><strong>投票结果</strong></td>
-					<td style="width: 70px; text-indent: 0.1em;" rowspan="2"><strong>结&nbsp;&nbsp;&nbsp;&nbsp;论</strong>
+					<td colspan="3" style="height: 30px;"><strong>投票结果</strong></td>
+					<td style="width: 85px; text-indent: 0.1em;" rowspan="2"><strong>结&nbsp;&nbsp;&nbsp;&nbsp;论</strong>
 					</td>
 				</tr>
 				<tr>
-					<td style="width: 60px; text-align: center; height: 30px;"><strong>赞成</strong>
+					<td style="width: 60px; text-align: center; height: 40px;"><strong>赞成</strong>
 					</td>
 					<td style="width: 50px; text-align: center;"><strong>反对</strong></td>
 					<td style="width: 50px; text-align: center;"><strong>弃权</strong></td>
@@ -284,7 +278,7 @@
 								}
 								else{
 ?>
-		<div>
+		<div style="margin-top: 100px">
 <h2 style="text-align: center; margin-top: 60px;">
 			<?php echo '武汉市职称评审投票结果表';?>
 		</h2>
@@ -298,24 +292,24 @@
 				</td>
 			</tr>
 		</table>
-		<div style="height: 720px; margin-left: 20px; width: 600px;">
+		<div style="height: 880px; margin-left: 0px; width: 700px;font-size:20px">
 			<table style="text-align: center;" class="tabl">
 				<tr>
-					<td style="width: 55px;" rowspan="2"><strong>序号</strong></td>
-					<td style="width: 90px;" rowspan="2"><strong>袋&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</strong>
+					<td style="width: 65px;" rowspan="2"><strong>序号</strong></td>
+					<td style="width: 105px;" rowspan="2"><strong>袋&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;号</strong>
 					</td>
-					<td style="width: 75px;" rowspan="2"><strong>姓&nbsp;&nbsp;&nbsp;&nbsp;名</strong>
+					<td style="width: 85px;" rowspan="2"><strong>姓&nbsp;&nbsp;&nbsp;&nbsp;名</strong>
 					</td>
-					<td style="width: 70px; line-height: 28px;" rowspan="2"><strong>破&nbsp;&nbsp;&nbsp;格<br />结&nbsp;&nbsp;&nbsp;论
+					<td style="width: 80px; line-height: 28px;" rowspan="2"><strong>破&nbsp;&nbsp;&nbsp;格<br />结&nbsp;&nbsp;&nbsp;论
 					</strong></td>
-					<td style="width: 70px; line-height: 28px;" rowspan="2"><strong>测&nbsp;&nbsp;&nbsp;试<br />结&nbsp;&nbsp;&nbsp;果
+					<td style="width: 80px; line-height: 28px;" rowspan="2"><strong>测&nbsp;&nbsp;&nbsp;试<br />结&nbsp;&nbsp;&nbsp;果
 					</strong></td>
-					<td colspan="3" style="height: 20px;"><strong>投票结果</strong></td>
-					<td style="width: 70px; text-indent: 0.1em;" rowspan="2"><strong>结&nbsp;&nbsp;&nbsp;&nbsp;论</strong>
+					<td colspan="3" style="height: 30px;"><strong>投票结果</strong></td>
+					<td style="width: 85px; text-indent: 0.1em;" rowspan="2"><strong>结&nbsp;&nbsp;&nbsp;&nbsp;论</strong>
 					</td>
 				</tr>
 				<tr>
-					<td style="width: 60px; text-align: center; height: 30px;"><strong>赞成</strong>
+					<td style="width: 60px; text-align: center; height: 40px;"><strong>赞成</strong>
 					</td>
 					<td style="width: 50px; text-align: center;"><strong>反对</strong></td>
 					<td style="width: 50px; text-align: center;"><strong>弃权</strong></td>
@@ -341,32 +335,32 @@
 							};
 							?>
 			<tr>
-					<td style="width: 55px; line-height: 30px;height: 31px;"><?php echo $i; ?></td>
-					<td style="width: 90px; line-height: 30px;"><?php echo $data->code; ?>
+					<td style="width: 55px; line-height: 36px;height: 37px;"><?php echo $i; ?></td>
+					<td style="width: 90px; line-height: 36px;"><?php echo $data->code; ?>
 					</td>
 					<td
-						style="width: 75px; line-height: 30px; text-align: left; text-indent: 0.6em;"><?php echo $data->name; ?>
+						style="width: 75px; line-height: 36px; text-align: left; text-indent: 0.6em;"><?php echo $data->name; ?>
 					</td>
-					<td style="width: 70px; line-height: 30px;"><?php echo $data->pgresult; ?>
+					<td style="width: 70px; line-height: 36px;"><?php echo $data->pgresult; ?>
 					</td>
-					<td style="width: 70px; line-height: 30px; font-size: 12px"><?php echo $dbresult; ?></font>
+					<td style="width: 70px; line-height: 36px; font-size: 12px"><?php echo $dbresult; ?></font>
 					</td>
-					<td style="width: 60px; line-height: 30px;"><?php echo $data->passno; ?>
+					<td style="width: 60px; line-height: 36px;"><?php echo $data->passno; ?>
 					</td>
-					<td style="width: 50px; line-height: 30px;"><?php echo $data->failno; ?>
+					<td style="width: 50px; line-height: 36px;"><?php echo $data->failno; ?>
 					</td>
-					<td style="width: 50px; line-height: 30px;"><?php echo $data->noneno; ?>
+					<td style="width: 50px; line-height: 36px;"><?php echo $data->noneno; ?>
 					</td>
-					<td style="width: 70px; line-height: 30px;"><?php echo $tpresult; ?>
+					<td style="width: 70px; line-height: 36px;"><?php echo $tpresult; ?>
 					</td>
 				</tr>
 				<?php if($i%20==0){ ?>
 			</table>
-			<div style="margin-top: 20px;page-break-after:always">
+			</div>
+			<div style="margin-top: 20px;page-break-after:always;font-size:20px">
 				<span style="margin-left: 320px;"><strong>主任委员（副主任委员）：</strong> </span>
 			</div>
-		</div>
-		<div style="page-break-after:always"></div>
+		
 		<?php 
 }
 
@@ -374,8 +368,8 @@
 	      if($i%20!=0) { ?>
 		</table>
 	</div>
-	<div style="margin-top: 30px;">
-		<span style="margin-left: 320px;"><strong>主任委员（副主任委员）：</strong> </sapn>
+	<div style="margin-top: 20px;page-break-after:always;font-size:20px">
+		<span style="margin-left: 320px;font-size:20px"><strong>主任委员（副主任委员）：</strong> </sapn>
 	</div>
 	<?php 
 	      }

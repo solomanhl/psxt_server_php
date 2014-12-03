@@ -18,6 +18,25 @@ function conference_applicant_menu() {
 			//'access arguments' => array('access administration pages'),
 			'weight' => -10
 	);
+	$items['conference/applicant/detail'] = array(
+			'title' => '参评人员信息',
+			'page callback' => 'conference_applicant_detail',
+			'type' => MENU_LOCAL_TASK,
+			//'type' => MENU_LOCAL_TASK,
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'weight' => -16
+	);
+	
+	$items['conference/applicant/spe_detail'] = array(
+			'title' => '参评人员信息',
+			'page callback' => 'conference_applicant_spedetail',
+			'type' => MENU_CALLBACK,
+			//'type' => MENU_LOCAL_TASK,
+			'access callback' => 'user_is_logged_in',
+			//'access arguments' => array('access administration pages'),
+			'weight' => -16
+	);
 	
 	$items['conference/applicant/list'] = array(
 			'title' => '参评人员列表',
@@ -102,6 +121,11 @@ function conference_applicant_menu() {
 	);
 	$items['scene_d.json'] = array(
 			'page callback' => 'scene_delete',
+			'access callback' => 'user_is_logged_in',
+			'type' => MENU_CALLBACK,
+	);
+	$items['conference/applicant/search'] = array(
+			'page callback' => 'ap_search',
 			'access callback' => 'user_is_logged_in',
 			'type' => MENU_CALLBACK,
 	);
@@ -615,7 +639,7 @@ function conference_applicant_overview() {
 		$spec_sql .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
 	}
 	$spec_sql = substr($spec_sql, 0, -1);
-	$sql = "SELECT c.* FROM {conference_applicant} c WHERE specgrp IN ($spec_sql) ORDER BY c.specgrp ASC";
+	$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class = s.code WHERE specgrp IN ($spec_sql) ORDER BY c.id ASC";
 //	$tablesort = tablesort_sql($header);
 	$result = pager_query($sql, 50);
 	while ($data = db_fetch_object($result)) {
@@ -625,9 +649,16 @@ function conference_applicant_overview() {
 		$edit = l('成果及附件查看', 'conference/applicant/' . $data->id . '/achmentview') ;
 		$name = l($data->name,'conference/applicant/'.$data->id);
 		
-		
-		
-		
+// 		if($data->class=='01'){
+// 			$class = '正常';
+// 		}
+// 		if($data->class=='04'){
+// 			$class = array('data'=>'破格', 'style'=>'color:#00f;');
+// 		}
+// 		if($data->class=='05'){
+// 			$class = '平转';
+// 		}
+		$class = $data->class_name;
 		$rows[] = array('data' =>
 				array(
 						$data->code,
@@ -636,7 +667,8 @@ function conference_applicant_overview() {
 						$spec['name'],
 						$data->level=='01'?'高级':'中级',
 						$dspec,
-							$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
+//						$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
+						$class,
 						$data->dbresult,
 						$data->pgresult,					
 						$edit
@@ -662,6 +694,296 @@ function conference_applicant_overview() {
 
 	$output .= theme('table', $header, $rows);
 	$output .= theme('pager', NULL, 50, 0);
+	docheck();
+	return $output;
+}
+
+//参评人员详细信息
+function conference_applicant_detail() {
+	global $user;
+
+	//----
+	$sql = "SELECT * FROM {conference_baseinfo} b  WHERE b.`status`=1";
+	$result = db_query($sql);
+	$spec_sql='0,';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		$pwhname = $s_result['conference_name'];
+		$spec_sql .= conference_process_specgrp($s_result['specgrp'], $s_result['level']);
+	}
+	$spec_sql = substr($spec_sql, 0, -1);
+	$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class=s.code WHERE specgrp IN ($spec_sql) ORDER BY c.id ASC";
+	//	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql, 1);
+	while ($data = db_fetch_object($result)) {
+		$dspec = conference_get_dspec_byid($data->dspec);
+		$spec = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code=".$data->specgrp." OR code=".($data->specgrp-100)));
+		$specgrp = $data->specgrp;
+		$spe_name = $spec['name'];
+		$educ_a = $data->educ1;
+		
+		$computer_a = $data->computer;
+		$english_a = $data->english;
+		$educ = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'educ' AND code = '$educ_a'"));
+		$computer = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'computer' AND code = '$computer_a'"));
+		$english = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'english' AND code = '$english_a'"));
+		$educ_name = $educ['name'];
+		$computer_name = $computer['name'];
+		$english_name = $english['name'];
+		if($data->sex=='Y'){
+			$sex ='男';
+		}
+		else{
+			$sex ='女';
+		}
+		if($data->level=='01'){
+			$level ='高级';
+		}
+		else{
+			$level ='中级';
+		}
+		if($data->reeduc=='Y'){
+			$reeduc ='达标';
+		}
+		else{
+			$reeduc ='不达标';
+		}
+		$output  = "<script language=\"JavaScript\">this.location.href=\"#local\"</script>
+	<div class=\"main\" >
+	<span ><b>姓名</b></span><input id=\"name\" style=\"width:100px\"/>
+	<span><b>材料袋号</b></span><input id=\"code\" style=\"width:150px\"/>
+	<button type=\"button\" id=\"ap_search\" style=\"width:50px\"><span style=\"font-size:15px\">搜索</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/detail'\"><span style=\"font-size:15px\">默认排序</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/spe_detail'\"><span style=\"font-size:15px\">按专业排序</button>
+	<div class=\"tab_title\">
+	<table>
+	<tr>
+	<th>材料代号</td>
+	<td>".$data->code."</td>
+	<th>姓名</td>
+	<td>".$data->name."</td>
+	<th>性别</td>
+	<td>".$sex."</td>
+	<th>身份证</td>
+	<td>".$data->card_id."</td>
+	</tr>
+	<tr>
+	<th>出生日期</td>
+	<td>".$data->birthdate."</td>
+	<th>工作单位</td>
+	<td colspan=\"5\">".$data->company."</td>
+	</tr>
+	<tr>
+	<th>毕业院校</td>
+	<td style=\"width:200px;overflow:hidden\" >".$data->college1."</td>
+	<th>毕业时间</td>
+	<td>".$data->graddate1."</td>
+	<th>学历</td>
+	<td style=\"width:50px;overflow:hidden\">".$educ_name."</td>
+	<th>所学专业</td>
+	<td style=\"width:200px;overflow:hidden\">".$data->sspec1."</td>
+	</tr>
+	</table>
+	</div>
+	<!-- 头部表格结束 -->
+		
+	<div class=\"tab_lists\">
+			<div class=\"list1 same\">
+					<ul>
+					<li><span>申报类型：</span>".$data->class_name."</li>
+					<li><span>申报级别：</span>".$level."</li>
+					<li><span>评委会：</span>".$pwhname."</li>
+					<li><span>从事专业：</span>".$dspec."</li>
+					</ul>
+					</div>
+					<!-- 列表一结束 -->
+		
+					<div class=\"list2 same\">
+					<ul>
+							<li><span>现任职务：</span>".$data->oproff1."</li>
+							<li><span>任职年限：</span>".$data->total1."年</li>
+							</ul>
+							</div>
+							<!-- 列表二结束 -->
+		
+							<div class=\"list3 same\">
+							<ul>
+									<li><span>优秀：</span>".$data->excellent."次</li>
+									<li><span>职称：</span>".$data->good."次</li>
+									<li><span>基本职称：</span>".$data->pass."次</li>
+									<li><span>外语成绩：</span>".$english_name."</li>
+									<li><span>计算机能力：</span>".$computer_name."</li>
+									<li><span>继续教育：</span>".$reeduc."</li>
+									</ul>	
+									</div>
+									<!-- 列表三结束 -->
+		
+									</div><a name=\"local\"></a>";
+	}
+
+// 	if (!$rows) {
+// 		$rows[] = array(array('data' => t('无参评人员信息。'), 'colspan' => 9));
+// 		drupal_set_title('未开启评审！');
+// 	}
+// 	else{
+// 		drupal_set_title('参评人员信息');
+// 	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_css($path .'/js/canping.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+	
+	$output .= theme('pager', NULL, 1, 0);
+//	$output .= "<a name=\"#local\"></a>";
+	docheck();
+	return $output;
+}
+
+//参评人员详细信息_按专业排序
+function conference_applicant_spedetail() {
+	global $user;
+
+	//----
+	$sql = "SELECT * FROM {conference_baseinfo} b  WHERE b.`status`=1";
+	$result = db_query($sql);
+	$spec_sql='0,';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		$pwhname = $s_result['conference_name'];
+		$spec_sql .= conference_process_specgrp_xianchang($s_result['specgrp'], $s_result['level']);
+	}
+	$spec_sql = substr($spec_sql, 0, -1);
+	$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class=s.code WHERE c.specgrp IN ($spec_sql) ORDER BY c.specgrp ASC";
+	//	$tablesort = tablesort_sql($header);
+	$result = pager_query($sql, 1);
+	while ($data = db_fetch_object($result)) {
+		$dspec = conference_get_dspec_byid($data->dspec);
+		$spec = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code=".$data->specgrp." OR code=".($data->specgrp-100)));
+		$specgrp = $data->specgrp;
+		$spe_name = $spec['name'];
+		$educ_a = $data->educ1;
+
+		$computer_a = $data->computer;
+		$english_a = $data->english;
+		$educ = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'educ' AND code = '$educ_a'"));
+		$computer = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'computer' AND code = '$computer_a'"));
+		$english = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'english' AND code = '$english_a'"));
+		$educ_name = $educ['name'];
+		$computer_name = $computer['name'];
+		$english_name = $english['name'];
+		if($data->sex=='Y'){
+			$sex ='男';
+		}
+		else{
+			$sex ='女';
+		}
+		if($data->level=='01'){
+			$level ='高级';
+		}
+		else{
+			$level ='中级';
+		}
+		if($data->reeduc=='Y'){
+			$reeduc ='达标';
+		}
+		else{
+			$reeduc ='不达标';
+		}
+		$output  = "<script language=\"JavaScript\">this.location.href=\"#local\"</script>
+	<div class=\"main\" >
+	<span ><b>姓名</b></span><input id=\"name\" style=\"width:100px\"/>
+	<span><b>材料袋号</b></span><input id=\"code\" style=\"width:150px\"/>
+	<button type=\"button\" id=\"ap_search\" style=\"width:50px\"><span style=\"font-size:15px\">搜索</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/detail'\"><span style=\"font-size:15px\">默认排序</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/spe_detail'\"><span style=\"font-size:15px\">按专业排序</button>			
+	<div class=\"tab_title\">
+	<table>
+	<tr>
+	<th>材料代号</td>
+	<td>".$data->code."</td>
+	<th>姓名</td>
+	<td>".$data->name."</td>
+	<th>性别</td>
+	<td>".$sex."</td>
+	<th>身份证</td>
+	<td>".$data->card_id."</td>
+	</tr>
+	<tr>
+	<th>出生日期</td>
+	<td>".$data->birthdate."</td>
+	<th>工作单位</td>
+	<td colspan=\"5\">".$data->company."</td>
+	</tr>
+	<tr>
+	<th>毕业院校</td>
+	<td style=\"width:200px;overflow:hidden\" >".$data->college1."</td>
+	<th>毕业时间</td>
+	<td>".$data->graddate1."</td>
+	<th>学历</td>
+	<td style=\"width:50px;overflow:hidden\">".$educ_name."</td>
+	<th>所学专业</td>
+	<td style=\"width:200px;overflow:hidden\">".$data->sspec1."</td>
+	</tr>
+	</table>
+	</div>
+	<!-- 头部表格结束 -->
+
+	<div class=\"tab_lists\">
+			<div class=\"list1 same\">
+					<ul>
+					<li><span>申报类型：</span>".$data->class_name."</li>
+					<li><span>申报级别：</span>".$level."</li>
+					<li><span>评委会：</span>".$pwhname."</li>
+					<li><span>从事专业：</span>".$dspec."</li>
+					</ul>
+					</div>
+					<!-- 列表一结束 -->
+
+					<div class=\"list2 same\">
+					<ul>
+							<li><span>现任职务：</span>".$data->oproff1."</li>
+							<li><span>任职年限：</span>".$data->total1."年</li>
+							</ul>
+							</div>
+							<!-- 列表二结束 -->
+
+							<div class=\"list3 same\">
+							<ul>
+									<li><span>优秀：</span>".$data->excellent."次</li>
+									<li><span>职称：</span>".$data->good."次</li>
+									<li><span>基本职称：</span>".$data->pass."次</li>
+									<li><span>外语成绩：</span>".$english_name."</li>
+									<li><span>计算机能力：</span>".$computer_name."</li>
+									<li><span>继续教育：</span>".$reeduc."</li>
+									</ul>
+									</div>
+									<!-- 列表三结束 -->
+
+									</div><a name=\"local\"></a>";
+	}
+
+	// 	if (!$rows) {
+	// 		$rows[] = array(array('data' => t('无参评人员信息。'), 'colspan' => 9));
+	// 		drupal_set_title('未开启评审！');
+	// 	}
+	// 	else{
+	// 		drupal_set_title('参评人员信息');
+	// 	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_css($path .'/js/canping.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('pager', NULL, 1, 0);
+	//	$output .= "<a name=\"#local\"></a>";
 	docheck();
 	return $output;
 }
@@ -703,16 +1025,18 @@ function conference_applicant_progress() {
 	}
 	if($order == '写意见状态'){
 //		$sql = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND s.opinion='' ORDER BY c.specgrp ASC";
-		$sql = "SELECT c.* FROM {conference_applicant} c WHERE c.specgrp IN ($spec_sql) AND c.opinion_plus=''";
-		$sql2 = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND s.opinion !='' ORDER BY c.specgrp ASC";
+		$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class = s.code WHERE c.specgrp IN ($spec_sql) AND c.opinion_plus=''";
+//		$sql2 = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND s.opinion !='' ORDER BY c.specgrp ASC";
+		$sql2 = "SELECT c.*,c.opinion_plus AS opinion,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class = s.code WHERE c.specgrp IN ($spec_sql) AND c.opinion_plus !='' ORDER BY c.specgrp ASC";
 	}
 	if($order == '量化状态'){
 		$sql = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND c.lianghua='不量化' ORDER BY c.specgrp ASC";
+//		$sql2 = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND c.lianghua ='量化' ORDER BY c.specgrp ASC";
 		$sql2 = "SELECT c.*,s.opinion FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON s.aid=c.code  WHERE c.specgrp IN ($spec_sql) AND c.lianghua ='量化' ORDER BY c.specgrp ASC";
 	}
 	//	$tablesort = tablesort_sql($header);
-	$result = pager_query($sql, 100);
-	$result2 = pager_query($sql2, 100);
+	$result = pager_query($sql, 1000);
+	$result2 = pager_query($sql2, 1000);
 	
 	
 		while ($data = db_fetch_object($result)) {
@@ -757,6 +1081,20 @@ function conference_applicant_progress() {
 			else{
 				$lianghua = array('data'=>'不量化', 'style'=>'color:#00f;');
 			}
+			
+// 			if($data->class=='01'){
+// 				$class = '正常';
+// 			}
+// 			if($data->class=='04'){
+// 				$class = array('data'=>'破格', 'style'=>'color:#00f;');
+// 			}
+// 			if($data->class=='05'){
+// 				$class = '平转';
+// 			}
+			$class = $data->class_name;
+			if($class == '破格'){
+				$class = array('data'=>'破格', 'style'=>'color:#00f;');
+			}
 				$rows[] = array('data' =>
 						array(
 								$data->code,
@@ -765,7 +1103,8 @@ function conference_applicant_progress() {
 								$spec['name'],
 								$data->level=='01'?'高级':'中级',
 								$dspec,
-								$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
+								$class,
+//								$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
 								$data->dbresult,
 								$lianghua,
 //								$pingfen,
@@ -817,6 +1156,10 @@ function conference_applicant_progress() {
 			else{
 				$lianghua = array('data'=>'不量化', 'style'=>'color:#00f;');
 			}
+			$class = $data->class_name;
+			if($class == '破格'){
+				$class = array('data'=>'破格', 'style'=>'color:#00f;');
+			}
 			$rows[] = array('data' =>
 						array(
 								$data->code,
@@ -825,7 +1168,8 @@ function conference_applicant_progress() {
 								$spec['name'],
 								$data->level=='01'?'高级':'中级',
 								$dspec,
-								$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
+								$class,
+//								$data->class=='01'?'正常':array('data'=>'破格', 'style'=>'color:#00f;'),
 								$data->dbresult,
 								$lianghua,
 //								$pingfen,
@@ -898,7 +1242,7 @@ function conference_applicant_progress() {
 	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
 
 	$output .= theme('table', $header, $rows);
-	$output .= theme('pager', NULL, 100, 0);
+	$output .= theme('pager', NULL, 1000, 0);
 	docheck();
 	return $output;
 }
@@ -1892,29 +2236,52 @@ function conference_expert_panel_list(){
 				$specgrp.='(高级、中级)';
 				break;
 		}
-		if($data->status=='0') {
-			$status = l('开启评审', 'conference/expert_panel/',
-					array('attributes' => array('class'=>'ps_switch','id'=>$data->id,'name'=>'open','onclick'=>'return false')));
+		if($data->status=='2'){
+			$status="评审结束";
 		}
-		else $status = l('关闭评审', 'conference/expert_panel/',
-				array('attributes' => array('class'=>'ps_switch','id'=>$data->id,'name'=>'close','onclick'=>'return false')));
+		else{
+			if($data->status=='0') {
+				$status = l('开启评审', 'conference/expert_panel/',
+						array('attributes' => array('class'=>'ps_switch','id'=>$data->id,'name'=>'open','onclick'=>'return false')));
+			}
+			else $status = l('关闭评审', 'conference/expert_panel/',
+					array('attributes' => array('class'=>'ps_switch','id'=>$data->id,'name'=>'close','onclick'=>'return false')));
+		}
+		
+		
 		$edit = l('编辑分组', 'conference/expert_panel/' . $data->id . '/edit').'&nbsp;&nbsp;&nbsp;';
 		$edit .= l('量化设置', 'conference/expert_panel/' . $data->id . '/lhset').'&nbsp;&nbsp;&nbsp;';
 		$edit .= l('打印设置', 'conference/expert_panel/' . $data->id . '/dyset').'&nbsp;&nbsp;&nbsp;';
 		$edit .= l('删除', 'conference/expert_panel/' . $data->id . '/delete',
 				array('attributes' => array('class'=>'baseinfo_d','name'=>$data->id,'onclick'=>'return false')));
 		$edit .= '&nbsp;&nbsp;'.$status;
-		$rows[] = array('data' =>
+		if($data->status=='2'){
+			$rows[] = array('data' =>
 				array(
 						$data->conference_name,
 						$specgrp,
 						$data->senior_expert,
 						$data->timestamp,
 						$data->assess_number,
-						$data->status?'评审中':'未开启评审',
+						'评审结束',
 						$edit
 				)
 		);
+		}
+		else{
+			$rows[] = array('data' =>
+					array(
+							$data->conference_name,
+							$specgrp,
+							$data->senior_expert,
+							$data->timestamp,
+							$data->assess_number,
+							$data->status?'评审中':'未开启评审',
+							$edit
+					)
+			);
+		}
+		
 	}
 	
 	if (!$rows) {
@@ -2237,6 +2604,16 @@ function conference_dyset_form(&$form_state, $baseinfo){
 	// 			'#size' => 15
 	// //			'#required' => TRUE
 	// 	);
+	
+	$form['group']['name'] = array(
+			'#title' => t('打印名称'),
+			'#type' => 'textfield',
+			'#size' => 50,
+			'#maxlength' => 255,
+			'#default_value' => '',
+			//'#weight' => -7,
+			//'#required' => TRUE
+	);
 
 	$form['group']['level'] = array(
 	          '#title' => t('评审级别'),
@@ -2246,6 +2623,13 @@ function conference_dyset_form(&$form_state, $baseinfo){
 		      //'#weight' => 2,
 		      '#required' => TRUE
 	);
+	
+	$form['group']['specgrp'] = array(
+			'#title' => t('选择评委会'),
+			'#type' => 'checkboxes',
+			'#options' =>  conference_get_specgrp(null,1),
+			'#required' => TRUE
+	);
 	$form['bid'] = array(
 			'#type' => 'hidden',
 			'#default_value' => $baseinfo['id'],
@@ -2253,9 +2637,15 @@ function conference_dyset_form(&$form_state, $baseinfo){
 
 	$form['submit'] = array(
 			'#type' => 'submit',
-			'#value' => t('Submit'),
+			'#value' => t('评审情况打印'),
 			'#weight' => 8,
 			'#submit' => array('conference_dyset_form_submit'),
+	);
+	$form['submit1'] = array(
+			'#type' => 'submit',
+			'#value' => t('表决情况打印'),
+			'#weight' => 8,
+			'#submit' => array('conference_dyset_form_submit1'),
 	);
 	return $form;
 }
@@ -2356,6 +2746,7 @@ function conference_lhset_form_submit($form, &$form_state) {
 function conference_dyset_form_submit($form, &$form_state) {
 	$edit = &$form_state['values'];
 	$dy_level = $edit['level'];
+	$dy_name = $edit['name'];
 	$pwhid = $edit['bid'];
 	if($dy_level[2]&&$dy_level[1]){
 		$node->level = '3';
@@ -2366,14 +2757,45 @@ function conference_dyset_form_submit($form, &$form_state) {
 	elseif((!$dy_level[1])&&$dy_level[2]){
 		$node->level = '2';
 	}
-	$sql = "UPDATE {conference_baseinfo}  SET dy_level = '$node->level' WHERE id = $pwhid ";
+	foreach ($edit['specgrp'] as $key => $value){
+		if($value) $node->specgrp .= $key.',';
+	}
+	$node->specgrp = substr($node->specgrp, 0, -1);
+	$sql = "UPDATE {conference_baseinfo}  SET dy_level = '$node->level', dy_specgrp = '$node->specgrp',dy_name = '$dy_name' WHERE id = $pwhid ";
 	$result = db_query($sql);
 	if($result){
 		drupal_set_message('打印设置成功！');
 	}
-	$form_state['redirect'] = 'conference/expert_panel/'.$edit['bid'].'/dyset';
+	$form_state['redirect'] = 'conference/expert_panel/'.$edit['bid'].'/reportout';
 }
 
+
+//量化设置提交
+function conference_dyset_form_submit1($form, &$form_state) {
+	$edit = &$form_state['values'];
+	$dy_level = $edit['level'];
+	$dy_name = $edit['name'];
+	$pwhid = $edit['bid'];
+	if($dy_level[2]&&$dy_level[1]){
+		$node->level = '3';
+	}
+	elseif((!$dy_level[2])&&$dy_level[1]){
+		$node->level = '1';
+	}
+	elseif((!$dy_level[1])&&$dy_level[2]){
+		$node->level = '2';
+	}
+	foreach ($edit['specgrp'] as $key => $value){
+		if($value) $node->specgrp .= $key.',';
+	}
+	$node->specgrp = substr($node->specgrp, 0, -1);
+	$sql = "UPDATE {conference_baseinfo}  SET dy_level = '$node->level', dy_specgrp = '$node->specgrp', dy_name = '$dy_name' WHERE id = $pwhid ";
+	$result = db_query($sql);
+	if($result){
+		drupal_set_message('打印设置成功！');
+	}
+	$form_state['redirect'] = 'conference/expert_panel/'.$edit['bid'].'/reportresult';
+}
 //现场分组
 function conference_expert_scene_form_submit($form, &$form_state) {
 	$edit = &$form_state['values'];
@@ -2434,22 +2856,39 @@ function conference_expert_group_form_submit($form, &$form_state) {
 	$result = db_query($sql, $node->bid);
 	while($data = db_fetch_array($result)){
 		$specgrp = $data['specgrp'];
-		switch ($data['level']){
-			case 2:
-				$specgrp = $specgrp+100;
-				break;
-			case 3:
-				if ($specgrp<200) $specgrp .= ','.($specgrp+100);
-				break;
+		$specgrp_array = split ('[,]', $specgrp);
+		$temp = $specgrp;
+		$specgrp = '';
+		foreach($specgrp_array as $key => $value){
+			switch ($data['level']){
+				case 1:
+					$specgrp = $temp.',';
+					break;
+				case 2:
+					if($specgrp_array[$key] == 201){
+						$specgrp .= $specgrp_array[$key].',';
+					}
+					else{
+						if ($specgrp_array[$key]<200) {
+							$specgrp .= ($specgrp_array[$key]+100).',';
+						}
+						else{
+							$specgrp .= $specgrp_array[$key].',';
+						}
+					}
+					break;
+				case 3:
+					if ($specgrp_array[$key]<200) $specgrp .= $specgrp_array[$key].','.($specgrp_array[$key]+100).',';
+					break;
+			}
 		}
+		
 	}
-	
+	$specgrp = substr($specgrp, 0, -1);
 	$assess_number = 0;
 	$sql = "SELECT count(*) AS num FROM {conference_applicant} WHERE dspec IN (%s) AND specgrp IN(%s)";
 	$number = db_fetch_array(db_query($sql, $node->dspec, $specgrp));
 	$assess_number = $number['num'];
-	
-	
  	drupal_write_record('conference_baseinfo_group', $node);
  	$sql = "UPDATE {conference_baseinfo} b SET expert_number = b.expert_number+%d, assess_number = b.assess_number+%d WHERE b.id = %d";
  	db_query($sql,$expert_num,$assess_number,$node->bid);
@@ -2750,6 +3189,168 @@ function scene_delete(){
 	print drupal_json($status);
 	exit;
 }
+
+//搜索参评人员信息
+function ap_search(){
+	$name = $_GET['Name'];
+	$code = $_GET['Code'];
+	//----
+	
+	$sql = "SELECT * FROM {conference_baseinfo} b  WHERE b.`status`=1";
+	$result = db_query($sql);
+	$spec_sql='0,';//处理后查询人的评委会id
+	while($s_result = db_fetch_array($result)){
+		$pwhname = $s_result['conference_name'];
+		$spec_sql .= conference_process_specgrp_xianchang($s_result['specgrp'], $s_result['level']);
+	}
+	$spec_sql = substr($spec_sql, 0, -1);
+	if($name == '' && $code != ''){
+		$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class=s.code WHERE c.code like '%$code%'";
+	}
+	if($name != '' && $code == ''){
+		$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class=s.code WHERE c.name like '%$name%'";
+	}
+	if($name != '' && $code != ''){
+		$sql = "SELECT c.*,s.name AS class_name FROM {conference_applicant} c LEFT JOIN {class} s ON c.class=s.code WHERE c.name like '%$name%' AND c.code like '%$code%'";
+	}
+	$result1 = db_query($sql);
+	//	$tablesort = tablesort_sql($header);
+	if(db_fetch_object($result1) == null){
+		drupal_set_message("结果不存在或查询条件错误");
+	}
+	
+	$result = pager_query($sql, 1);
+ 	
+	
+	while ($data = db_fetch_object($result)) {
+		
+		$dspec = conference_get_dspec_byid($data->dspec);
+		$spec = db_fetch_array(db_query("SELECT name FROM {conference_specgrp} WHERE code=".$data->specgrp." OR code=".($data->specgrp-100)));
+		$specgrp = $data->specgrp;
+		$spe_name = $spec['name'];
+		$educ_a = $data->educ1;
+
+		$computer_a = $data->computer;
+		$english_a = $data->english;
+		$educ = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'educ' AND code = '$educ_a'"));
+		$computer = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'computer' AND code = '$computer_a'"));
+		$english = db_fetch_array(db_query("SELECT name FROM {conference_performance} WHERE type = 'english' AND code = '$english_a'"));
+		$educ_name = $educ['name'];
+		$computer_name = $computer['name'];
+		$english_name = $english['name'];
+		if($data->sex=='Y'){
+			$sex ='男';
+		}
+		else{
+			$sex ='女';
+		}
+		if($data->level=='01'){
+			$level ='高级';
+		}
+		else{
+			$level ='中级';
+		}
+		if($data->reeduc=='Y'){
+			$reeduc ='达标';
+		}
+		else{
+			$reeduc ='不达标';
+		}
+		$output  = "<script language=\"JavaScript\">this.location.href=\"#local\"</script>
+	<div class=\"main\" >
+	<span ><b>姓名</b></span><input id=\"name\" style=\"width:100px\"/>
+	<span><b>材料袋号</b></span><input id=\"code\" style=\"width:150px\"/>
+	<button type=\"button\" id=\"ap_search\" style=\"width:50px\"><span style=\"font-size:15px\">搜索</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/detail'\"><span style=\"font-size:15px\">默认排序</button>
+	<button type=\"button\" id=\"ap_search\" style=\"width:100px\" onclick=\"javascrtpt:window.location.href='/conference/applicant/spe_detail'\"><span style=\"font-size:15px\">按专业排序</button>			
+	<div class=\"tab_title\">
+	<table>
+	<tr>
+	<th>材料代号</td>
+	<td>".$data->code."</td>
+	<th>姓名</td>
+	<td>".$data->name."</td>
+	<th>性别</td>
+	<td>".$sex."</td>
+	<th>身份证</td>
+	<td>".$data->card_id."</td>
+	</tr>
+	<tr>
+	<th>出生日期</td>
+	<td>".$data->birthdate."</td>
+	<th>工作单位</td>
+	<td colspan=\"5\">".$data->company."</td>
+	</tr>
+	<tr>
+	<th>毕业院校</td>
+	<td style=\"width:200px;overflow:hidden\" >".$data->college1."</td>
+	<th>毕业时间</td>
+	<td>".$data->graddate1."</td>
+	<th>学历</td>
+	<td style=\"width:50px;overflow:hidden\">".$educ_name."</td>
+	<th>所学专业</td>
+	<td style=\"width:200px;overflow:hidden\">".$data->sspec1."</td>
+	</tr>
+	</table>
+	</div>
+	<!-- 头部表格结束 -->
+
+	<div class=\"tab_lists\">
+			<div class=\"list1 same\">
+					<ul>
+					<li><span>申报类型：</span>".$data->class_name."</li>
+					<li><span>申报级别：</span>".$level."</li>
+					<li><span>评委会：</span>".$pwhname."</li>
+					<li><span>从事专业：</span>".$dspec."</li>
+					</ul>
+					</div>
+					<!-- 列表一结束 -->
+
+					<div class=\"list2 same\">
+					<ul>
+							<li><span>现任职务：</span>".$data->oproff1."</li>
+							<li><span>任职年限：</span>".$data->total1."年</li>
+							</ul>
+							</div>
+							<!-- 列表二结束 -->
+
+							<div class=\"list3 same\">
+							<ul>
+									<li><span>优秀：</span>".$data->excellent."次</li>
+									<li><span>职称：</span>".$data->good."次</li>
+									<li><span>基本职称：</span>".$data->pass."次</li>
+									<li><span>外语成绩：</span>".$english_name."</li>
+									<li><span>计算机能力：</span>".$computer_name."</li>
+									<li><span>继续教育：</span>".$reeduc."</li>
+									</ul>
+									</div>
+									<!-- 列表三结束 -->
+
+									</div><a name=\"local\"></a>";
+	}
+
+	// 	if (!$rows) {
+	// 		$rows[] = array(array('data' => t('无参评人员信息。'), 'colspan' => 9));
+	// 		drupal_set_title('未开启评审！');
+	// 	}
+	// 	else{
+	// 		drupal_set_title('参评人员信息');
+	// 	}
+
+	$path = drupal_get_path('module', 'conference_applicant');
+	drupal_add_css($path .'/js/jquery.alerts.css');
+	drupal_add_css($path .'/js/canping.css');
+	drupal_add_js($path .'/js/jquery.alerts.js');
+	drupal_add_js($path .'/js/conference_register.js');
+
+	//$output = '<div style="float:right;margin-right:50px; width:150px;">'. l('添加参会人员名单', 'conference/register/add') .'</div>';
+	//$output .= '<div style="float:right;margin-right:5px; width:150px;">'. l('查看参会资料和附件', 'conference/document', array('attributes' => array('target'=>'_blank'))) .'</div><p></p>';
+
+	$output .= theme('pager', NULL, 1, 0);
+	//	$output .= "<a name=\"#local\"></a>";
+	docheck();
+	return $output;
+}
 /*
  * XML文件的生成(多人信息)
  */
@@ -2906,7 +3507,7 @@ function conference_applicant_one_export_xml() {
 		$experts = $sence_group->expert;
 		
 //		$psql = "SELECT c.*,s.gerenyijian,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON c.code=s.aid INNER JOIN {conference_expert} e ON s.expert_id = e.id WHERE s.conference_id = $conference_id AND s.expert_id IN($experts) AND s.score >= 0";
-		$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp IN ($specgrp)";
+		$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp IN ($specgrp) ORDER BY c.id ASC";
 		
 		$presult = db_query($psql);
 		
@@ -2924,7 +3525,7 @@ function conference_applicant_one_export_xml() {
 // 		}
 //		else{
 			$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-			$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $conference_name."\">";
+			$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $conference_name."\" specgrp=\"\">";
 			$output .= $items;
 			$output .= "</root>\n";
 //		}
@@ -2955,7 +3556,6 @@ function conference_applicant_one_export_xml() {
 			$conference_name = $data['conference_name'];
 			$conference_id = $data["id"];
 			$specgrp .= conference_process_specgrp_xianchang($data['specgrp'], $data['level']);
-				
 		}
 		$specgrp = substr($specgrp, 0, -1);
 		if(!$specgrp) $specgrp = '0';
@@ -2967,16 +3567,17 @@ function conference_applicant_one_export_xml() {
 			
 			for($i=0;$i<count($specgrp_one);$i++){
 				//			$psql = "SELECT c.*,s.opinion,s.group_score FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON c.code=s.aid WHERE s.conference_id=$conference_id AND s.opinion!='' AND c.specgrp IN ($specgrp) ORDER BY c.specgrp ASC";
-				$num1 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON c.code=s.aid WHERE c.level = '01' AND c.specgrp = '$specgrp_one[$i]' AND s.conference_id=$conference_id AND s.expert_id=$pwid AND s.vote!=''"));
+				$num1 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c LEFT JOIN {conference_expert_vote} s ON c.code=s.aid WHERE c.level = '01' AND c.specgrp = '$specgrp_one[$i]' AND s.conference_id=$conference_id AND s.expert_id=$pwid AND s.vote!=''"));
 				$num2 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '01'"));
-				$num3 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON c.code=s.aid WHERE c.level = '02'  AND c.specgrp = '$specgrp_one[$i]' AND s.conference_id=$conference_id AND s.expert_id=$pwid AND s.vote!=''"));
+				$num3 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c LEFT JOIN {conference_expert_vote} s ON c.code=s.aid WHERE c.level = '02'  AND c.specgrp = '$specgrp_one[$i]' AND s.conference_id=$conference_id AND s.expert_id=$pwid AND s.vote!=''"));
 				$num4 = db_result(db_query("SELECT COUNT(*) FROM {conference_applicant} c WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '02'"));
 					if($num1 != $num2){
-						$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '01'";
+						$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name,s.name AS spe_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id INNER JOIN {conference_specgrp} s ON c.specgrp = s.code WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '01'";
 						//					$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp IN ($specgrp) AND c.level = '01'";
 						//					$psql = "SELECT c.*,s.opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert_score} s ON c.code=s.aid INNER JOIN {conference_expert} e ON s.expert_id = e.id WHERE s.conference_id = $conference_id AND c.specgrp IN ($specgrp) AND c.level = '01' AND s.opinion!=''";
 						$presult = db_query($psql);
 						while ($applicant = db_fetch_object($presult)) {
+							$spe_name = $applicant->spe_name;
 							handleapplicant($applicant);
 							$items .= theme('conference_applicant', $applicant);
 						}
@@ -2984,7 +3585,7 @@ function conference_applicant_one_export_xml() {
 						$getinfo->name = '';
 						$getinfo->id = '';
 						$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-						$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $conference_name."\">";
+						$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $spe_name."\" specgrp=\"". $specgrp_one[$i] ."\">";
 						$output .= $items;
 						$output .= "</root>\n";
 						break;
@@ -2992,17 +3593,18 @@ function conference_applicant_one_export_xml() {
 					else{
 						if($num3 != $num4){
 							
-							$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '02'";
+							$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name,s.name AS spe_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id INNER JOIN {conference_specgrp} s ON c.specgrp = s.code WHERE c.specgrp = '$specgrp_one[$i]' AND c.level = '02'";
 							$presult = db_query($psql);
 							while ($applicant = db_fetch_object($presult)) {
 								handleapplicant($applicant);
+								$spe_name = $applicant->spe_name;
 								$items .= theme('conference_applicant', $applicant);
 							}
 							$getinfo = new stdClass();
 							$getinfo->name = '';
 							$getinfo->id = '';
 							$output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-							$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $conference_name."\">";
+							$output .= "<root name=\"". $getinfo->name."\" id=\"". $getinfo->id ."\" pwhname=\"". $spe_name."\" specgrp=\"". $specgrp_one[$i] ."\">";
 							$output .= $items;
 							$output .= "</root>\n";
 							//					$psql = "SELECT c.*,c.opinion_plus AS opinion,e.name AS expert_name FROM {conference_applicant} c LEFT JOIN {conference_expert} e ON c.expert_id_plus = e.id WHERE c.specgrp IN ($specgrp) AND c.level = '02'";
@@ -3244,6 +3846,11 @@ function conference_get_specgrp($id = null , $type = null) {
 		
 	}
 	else{
+		foreach ($specgrp as $key => $value){
+				$specgrp[$key] = $value.'('.$key.')';
+				
+		}
+		
 		return $specgrp;
 	}
 }
@@ -3252,30 +3859,40 @@ function conference_get_dspec($specgrp = null, $level = null,$infoid = null) {
 	/*
 	 * 获取人员专业
 	 */
-
+	
 	$specgrp_array = split ('[,]', $specgrp);
-	
-	switch ($level){
-		case 2:
-			if ($specgrp<200) {
-				$specgrp = "";
-				foreach ($specgrp_array as $key=>$value){
-					if($value) $specgrp .= ($value+100).",";
+	$temp = $specgrp;
+	$specgrp = "";
+	foreach ($specgrp_array as $key=>$value){
+		switch ($level){
+			case 1:
+				$specgrp = $temp.',';
+				break;
+			case 2:
+					
+				//201艺术（三级）
+				if($specgrp_array[$key] == 201){
+						if($value) $specgrp .= $value.",";
+						
 				}
-				$specgrp = substr($specgrp, 0, -1);
-			}
-			break;
-		case 3:
-			if ($specgrp<200){
-				$specgrp .= ",";
-				foreach ($specgrp_array as $key=>$value){
-					if($value) $specgrp .= ($value+100).",";
+				else{
+					if ($specgrp_array[$key]<200) {
+							if($value) $specgrp .= ($value+100).",";
+					}
+					else{
+						if($value) $specgrp .= $value.",";
+					}
 				}
-				$specgrp = substr($specgrp, 0, -1);
-			}
-			break;
+				break;
+			case 3:
+				if ($specgrp_array[$key]<200){
+						if($value) $specgrp .= $value.",".($value+100).",";
+				}
+				break;
+		}
 	}
-	
+
+	$specgrp = substr($specgrp, 0, -1);
 	$dsql = "SELECT * FROM conference_baseinfo_group WHERE bid = $infoid";
 	$dresult = db_query($dsql);
 	$dspec_filter = '';
@@ -3428,15 +4045,11 @@ function conference_process_specgrp_xianchang($specgrp = null, $level = null){
 					elseif($value) $specgrp .= $value.",";
 				}
 				break;
-				// 			case 3:
-				// 				$specgrp .= ",";
-				// 				foreach ($specgrp_array as $key=>$value){
-				// 					if($value&&$value<200) $specgrp .= ($value+100).",";
-				// 				}
 			case 3:
 				$specgrp_change = '';
 				foreach ($specgrp_array as $key=>$value){
 					if($value&&$value<200) $specgrp_change .= $value.",".($value+100).",";
+					elseif($value) $specgrp_change .= $value.",";
 				}
 				$specgrp = $specgrp_change;
 				break;

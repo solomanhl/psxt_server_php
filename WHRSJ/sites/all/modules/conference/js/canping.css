@@ -1,0 +1,17 @@
+*{padding: 0;margin: 0}
+body{font-size: 14px;font-family: 微软雅黑;color: #333;background: #efefef}
+img{border: none;}
+a{text-decoration: none;color: #333;}
+h1,h2,h3,h4,h5,h6{font-size:14px}
+a:hover{color:#3aa2d9 }
+ul,li,ol{list-style: none;}
+.main{width: 934px;margin: 0 auto}
+.tab_title{margin: 0 12px 10px;padding-top: 10px;width:910px}
+.tab_title table{border-collapse: collapse;width: 916px;text-align: left;}
+.tab_title th,.tab_title td{border: 1px solid #3da8dc;padding-left: 5px;padding:10px 0 5px}
+.tab_title th{background: #8ccbea;color: #0076af;font-size: 22px}
+.tab_title td{font-size: 20px}
+.tab_lists{width: 914px;margin: 0 10px 10px;overflow:hidden;}
+.tab_lists .same{width: 258px;background:#c0c0c0;padding: 12px 12px 12px 12px;border-radius: 15px;float: left;margin: 0 10px}
+.tab_lists .same ul{background: #fff;width:246px;border-radius: 15px;height: 260px;padding: 12px 0 0 12px;font-size: 20px;line-height: 44px}
+.tab_lists .same ul span{color: #0076af;font-weight: bold;}

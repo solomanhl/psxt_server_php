@@ -240,4 +240,18 @@ Drupal.behaviors.registerAdminBehavior = function(context) {
 			}
 		});
 	});
+	
+	$("#ap_search").click(function() {
+	var name = document.getElementById('name').value;
+	var code =  document.getElementById('code').value;
+	//window.location.href = '/expert/count';
+	if(name == '' && code == ''){
+		
+	}
+	else{
+		window.location.href="/conference/applicant/search?Name="+name+"&Code="+code;
+	}
+	
+	//	window.open("/conference/applicant/ap_search.json?Name=".name."&Code=".code.","_blank");
+	});
 }

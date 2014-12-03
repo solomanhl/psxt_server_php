@@ -180,17 +180,17 @@ function conference_expert_list() {
 
 function conference_expert_score_overview($baseinfo = array()) {
 	global $user;
-    drupal_set_title('评审进度');
+    drupal_set_title($baseinfo['conference_name'].'评审会');
     
 	// 		id	自动增长	编号
 
 	$header = array(
-			array('data' => t('编号'), 'field' => 'id','sort' => 'desc','width' =>'5%'),
-			array('data' => t('评委会名称'),  'field' => 'conference_id', 'width' =>'15%'),
-			array('data' => t('专家'), 'field' => 'name','width' =>'15%'), //不会重复
-			array('data' => t('工作单位'),  'field' => 'level', 'width' =>'25%'),
+			array('data' => t('<b style=" font-size:25px">编号</b>'), 'field' => 'id','sort' => 'desc','width' =>'5%','style'=>'height:40px'),
+//			array('data' => t('评委会名称'),  'field' => 'conference_id', 'width' =>'15%'),
+			array('data' => t('<b style=" font-size:25px">专家</b>'), 'field' => 'name','width' =>'15%','style'=>'height:40px'), //不会重复
+//			array('data' => t('工作单位'),  'field' => 'level', 'width' =>'25%'),
 //			array('data' => t('评分状态'), 'field' => 'pingfen', 'width' =>'15%'),
-			array('data' => t('投票情况'), 'field' => 'toupiao', 'width' =>'20%'),
+			array('data' => t('<b style=" font-size:25px">投票情况</b>'), 'field' => 'toupiao', 'width' =>'20%','style'=>'height:40px')
 	);
 	
 	$expert = "0,";
@@ -206,30 +206,44 @@ function conference_expert_score_overview($baseinfo = array()) {
 	
 	$i = 0;
 	while ($data = db_fetch_object($result)) {
+		$specgrp_f = $baseinfo['specgrp'];
+		$level_f = $baseinfo['level'];
+		$specgrp = conference_process_specgrp_xianchang($specgrp_f, $level_f);
+		$specgrp = substr($specgrp, 0, -1);
+		$sql_ap = "SELECT COUNT(*) AS count FROM {conference_applicant}  WHERE specgrp IN ($specgrp)";
+		$result_ap = db_fetch_array(db_query($sql_ap));
+		$count_ap = $result_ap['count'];
 		$i++;
-		$sql_s = "select * from {conference_expert_score} where expert_id = %d AND conference_id = %d";
+		$sql_s = "select * from {conference_expert_vote} where expert_id = %d AND conference_id = %d";
 		$result_s = db_query($sql_s, $data->id, $baseinfo['id']);
+		$sql_s = "select COUNT(*) AS count from {conference_expert_vote} where expert_id = %d AND conference_id = %d AND vote != ''";
+		$result_count = db_fetch_array(db_query($sql_s, $data->id, $baseinfo['id']));
+		$count_vote = $result_count['count'];
 		$count_pg = 0;
-		$count_pf = '未评分';
-		$count_tp = '未投票';
+		$count_pf = '<b font-size=20px>未评分</b>';
+		$count_tp = '<b style=" font-size:25px">正在投票</b>';
+		$name = '<b style=" font-size:25px">'.$data->name.'</b>';
 		while($data_s = db_fetch_object($result_s)){
 			//dvm($data_s->type);
-		    if($data_s->score != null){		//统计评分
-				$count_pf = array('data'=>'已评分', 'style'=>'color:#00f;');
-			}
-		   if($data_s->vote =='赞成'||$data_s->vote =='反对'||$data_s->vote =='弃权'){		//统计评分
-				$count_tp = array('data'=>'已投票', 'style'=>'color:#00f;');
+// 		    if($data_s->score != null){		//统计评分
+// 				$count_pf = array('data'=>'已评分', 'style'=>'color:#00f;');
+// 			}
+// 		   if($data_s->vote =='赞成'||$data_s->vote =='反对'||$data_s->vote =='弃权'){		//统计评分
+// 				$count_tp = array('data'=>'已投票', 'style'=>'color:#00f;font-size:25px');
+// 			}
+			if($count_ap == $count_vote){		//统计评分
+				$count_tp = array('data'=>'投票完成', 'style'=>'color:#00f;font-size:25px');
 			}
 		}
 		$rows[] = array('data' =>
 				array(
 						$i,
-						$baseinfo['conference_name'],
-						$data->name,
-						$data->organization,
+//						$baseinfo['conference_name'],
+						$name,
+//						$data->organization,
 //						$count_pf,
 						$count_tp,
-				)
+				), 'style'=>'height:40px'
 		);
 	}
 

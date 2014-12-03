@@ -55,12 +55,24 @@ function baseinfo_load($id) {
 
 
 function conference_report_reportout($baseinfo = array()){
-	$items = theme('conference_reportout', $baseinfo);
+	$agent = $_SERVER["HTTP_USER_AGENT"];
+	if(strpos($agent,"Chrome")){
+		$items = theme('conference_reportout', $baseinfo);
+	}
+	if(strpos($agent,"Firefox")){
+		$items = theme('conference_reportout_firefox', $baseinfo);
+	}
 	print $items;
 }
 
 function conference_report_reportresult($baseinfo = array()) {
-	$items = theme('conference_reportresult', $baseinfo);
+	$agent = $_SERVER["HTTP_USER_AGENT"];
+	if(strpos($agent,"Chrome")){
+		$items = theme('conference_reportresult', $baseinfo);
+	}
+	if(strpos($agent,"Firefox")){
+		$items = theme('conference_reportresult_firefox', $baseinfo);
+	}
 	print $items;
 }
 
@@ -76,7 +88,6 @@ function conference_report_list() {
 			array('data' => t('评审日期'), 'field' => 'date','width' =>'5%'),
 			array('data' => t('操作'),'width' =>'15%')
 	);
-
 	$sql = "SELECT * FROM {conference_baseinfo}";
 	$result = db_query($sql);
 	while($data = db_fetch_object($result)){
@@ -164,6 +175,14 @@ function conference_report_theme() {
 			),
 			'conference_reportresult' => array(
 					'template' => 'tpl/conference_reportresult',
+					'arguments' => array('baseinfo'=>null),
+			),
+			'conference_reportout_firefox' => array(
+					'template' => 'tpl/conference_reportout_firefox',
+					'arguments' => array('baseinfo'=>null),
+			),
+			'conference_reportresult_firefox' => array(
+					'template' => 'tpl/conference_reportresult_firefox',
 					'arguments' => array('baseinfo'=>null),
 			),
 			'conference_wishes' => array(

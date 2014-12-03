@@ -14,7 +14,7 @@
 <head>
 
 </head>
-<body style="width: 700px; margin-left: 30px;">
+<body style="width: 810px; margin-left: 50px;">
 	<?php 
 	$sql ="select a.* from {conference_baseinfo} a where id=%d";
 	$result2 = db_query($sql, $baseinfo['id']);
@@ -40,8 +40,8 @@
 	$sql ="select a.* from {conference_baseinfo} a where id=%d";
 	$result1 = db_query($sql, $baseinfo['id']);
 	while($cnfname = db_fetch_object($result1)){
-		if($cnfname->dy_level != ''){
-			$cnfname->level = $cnfname->dy_level;
+		if($cnfname->dy_level == '3'){
+			$cnfname->level = '3';
 		}
 		if($cnfname->dy_name != ''){
 			$cnfname->conference_name = $cnfname->dy_name;
@@ -63,35 +63,35 @@
 		//                     	else $zrpw.='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$director->name;
 		//                     }
 		?>
-	<div style="margin-top: 150px;">
+	<div style="margin-top: 160px;">
 		<div
-			style="text-align: center; font-family: 黑体; font-weight:1500; font-size: 18pt; line-height: 50px;">
+			style="text-align: center; font-family: 黑体; font-weight:1500; font-size: 22pt; line-height: 70px;">
 			<B><?php echo "<strong>"."武汉市"."&nbsp;&nbsp;".$cnfname->conference_name."&nbsp;&nbsp;"."专业"."&nbsp;".$level."&nbsp;"."评委会"."</strong>";?> </B></font>
 		</div>
 		<div
-			style="text-align: center; font-family: 黑体;font-weight:900; font-size: 18pt; line-height: 50px;">
+			style="text-align: center; font-family: 黑体;font-weight:900; font-size: 22pt; line-height:70px;">
 			<?php echo "<B>".$year."&nbsp;"."年会议表决情况备案表"."</B>"; ?> 
 		</div>
 		<div
-			style="margin-left: 30px; font-family: 宋体; font-size: 16pt; line-height: 50px; margin-top: 50px;">
-			<?php echo "<b style=\"font-family: 黑体;\">"."评审时间："."</b>"."&nbsp;&nbsp;&nbsp;"."<B>".$nian."&nbsp;&nbsp;"."年"."&nbsp;&nbsp;".$yue."&nbsp;&nbsp;"."月"."&nbsp;".$ri."&nbsp;"."日"."</B>";?>
+			style="margin-left: 30px; font-family: 宋体; font-size: 21pt; line-height: 70px; margin-top: 40px;">
+			<?php echo "<b style=\"font-family: 黑体;\">"."评审时间："."</b>"."&nbsp;&nbsp;&nbsp;"."<B>".$nian."&nbsp;"."年"."&nbsp;&nbsp;".$yue."&nbsp;&nbsp;"."月"."&nbsp;".$ri."&nbsp;"."日"."</B>";?>
 		</div>
 		<div
-			style="margin-left: 30px; font-family: 宋体; font-size: 16pt; line-height: 50px;">
+			style="margin-left: 30px; font-family: 宋体; font-size: 21pt; line-height: 70px;">
 			<?php echo "<b style=\"font-family: 黑体;\">"."评审地点："."</b>"."&nbsp;&nbsp;&nbsp;"."<B>".$cnfname->location."</B>"; ?>
 		</div>
 		<div
-			style="margin-left: 30px; font-family: 宋体; font-size: 16pt; line-height: 50px;">
+			style="margin-left: 30px; font-family: 宋体; font-size: 21pt; line-height: 70px;">
 			<?php global $user; echo "<b style=\"font-family: 黑体;\">"."工作人员："."</b>"."&nbsp;&nbsp;&nbsp;"."<B>".$user->r_name."</B>"; ?>
 			
 		</div>
-		<div style="height: 315px;">
+		<div style="height: 410px;width:770px">
 			<div
-				style="margin-left: 30px; font-family: 宋体; font-size: 16pt; line-height: 50px;">
+				style="margin-left: 30px; font-family: 宋体; font-size: 21pt; line-height: 70px;">
 				<?php  echo "<b style=\"font-family: 黑体;\">"."到会评委:"."</b>" ?>
 				
 			</div>
-			<div style="margin-left: 30px;font-weight:700; font-family: 宋体; font-size: 16pt; line-height: 45px;">
+			<div style="margin-left: 30px;font-weight:700; font-family: 宋体; font-size: 20pt; line-height: 50px;">
 				<?php 
 				$expert = "0,";
 				$sql = "SELECT * FROM {conference_baseinfo_group} WHERE bid=%d";
@@ -105,85 +105,121 @@
 				$export_result = db_query($sql, $expert);
 				$experts =array();
 				$i =0;
-				$flag = 1;
+				$flag = 0;
 				$j =0;
 				$len = 0;
-				echo "<table width=\"584px\">";
-				echo "<tr>";
+				$len_one = 0;
+				$aaa = 0;
+				$experts = array();
+				echo "<table width=\"696px\">";
 				while ($data = db_fetch_object($export_result)) {
 					$i++;
-					$flag++;
 					if($data->position =="副主任委员" || $data->position =="主任委员"){
 						$experts[$i] = $data->name."(".$data->position.")";
 					}
 					else{
 						$experts[$i] = $data->name;
 					}
-					$len_one = strlen($experts[$i]);
-					if($len_one<10){
-						$len_one = 10;
+				
+				}
+				for($k=1;$k<=sizeof($experts);$k++){
+					$len_one = strlen($experts[$k]);
+					$flag++;
+					if($len_one<12){
+						$len_one = 12;
 					}
-					$len += $len_one;
-					if($len >= 60){
+					if($len_one==12){
+						$len_one = 12;
+					}
+					if($len_one == 20){
+						$len_one = 24;
+					}
+					if($len_one == 23){
+						$len_one = 24;
+					}
+					if($len_one == 26){
+						$len_one = 36;
+					}
+					if($len_one == 29){
+						$len_one = 36;
+					}
+					$len += $len_one+$aaa;
+					$aaa = 0;
+					if($len == 72){
 						$len = 0;
-						if(strlen($experts[$i]) >= 20&&strlen($experts[$i]) <= 23){
-							echo "<td colspan=\"2\" align=\"left\" width =\"180px\"><B>".$experts[$i]."</B></td>";
+						if(strlen($experts[$k]) > 23){
+							echo "<td colspan=\"3\" width=\"348px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 						}
-						if(strlen($experts[$i]) > 23){
-							echo "<td colspan=\"2\" align=\"left\" width =\"205px\"><B>".$experts[$i]."</B></td>";
+							
+						else{
+							if(strlen($experts[$k]) >= 20&&strlen($experts[$k])<= 23){
+								echo "<td colspan=\"2\" width=\"232px\"  align=\"left\"><B>".$experts[$k]."</B></td>";
+							}
+							else{
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
+							}
 						}
-						if(strlen($experts[$i])<20){
-							echo "<td width=\"70px\" align=\"right\"><B>".$experts[$i]."</B></td>";
-						}
-						
+							
 						echo "<tr>";
 						$flag = 0;
 					}
-					else{
+					elseif($len < 72){
 						if($flag == 1){
-							if(strlen($experts[$i]) == 6){
+							if(strlen($experts[$k]) == 6){
 								echo "<tr>";
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) == 9){
+							if(strlen($experts[$k]) == 9){
 								echo "<tr>";
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) == 12){
+							if(strlen($experts[$k]) == 12){
 								echo "<tr>";
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) >= 20&&strlen($experts[$i]) <= 23){
-								echo "<tr>";	
-								echo "<td colspan=\"2\" width =\"180px\"><B>".$experts[$i]."</B></td>";
-							}
-							if(strlen($experts[$i]) > 23){
+							if(strlen($experts[$k]) >= 20 && strlen($experts[$k])<=23){
 								echo "<tr>";
-								echo "<td colspan=\"2\" width =\"205px\"><B>".$experts[$i]."</B></td>";
+								echo "<td colspan=\"2\" width=\"232px\" align=\"left\"><B>".$experts[$k]."</B></td>";
+							}
+							if(strlen($experts[$k]) > 23){
+								echo "<tr>";
+								echo "<td colspan=\"3\" width=\"348px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
 						}
 						else{
-							if(strlen($experts[$i]) == 6){
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+							if(strlen($experts[$k]) == 6){
+								echo "<td width=\"116px\"  align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) == 9){
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+							if(strlen($experts[$k]) == 9){
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) == 12){
-								echo "<td width=\"90px\"><B>".$experts[$i]."</B></td>";
+							if(strlen($experts[$k]) == 12){
+								echo "<td width=\"116px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) >= 20&&strlen($experts[$i]) <= 23){
-								echo "<td colspan=\"2\" width =\"180px\"><B>".$experts[$i]."</B></td>";
+							if(strlen($experts[$k]) >= 20 && strlen($experts[$k])<=23){
+
+								echo "<td colspan=\"2\" width=\"232px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
-							if(strlen($experts[$i]) > 23){
-								echo "<td colspan=\"2\" width =\"205px\"><B>".$experts[$i]."</B></td>";
+							if(strlen($experts[$k])>23){
+								echo "<td colspan=\"3\" width=\"348px\" align=\"left\"><B>".$experts[$k]."</B></td>";
 							}
 						}
-						
+							
 					}
-					
+					if($len > 72){
+						if(strlen($experts[$k]) >= 20&&strlen($experts[$k])<= 23){
+							echo "<tr>";
+							echo "<td colspan=\"2\" width=\"232px\" align=\"left\"><B>".$experts[$k]."</B></td>";
+						}
+						if(strlen($experts[$k]) > 23){
+							echo "<tr>";
+							echo "<td colspan=\"3\" width=\"348px\" align=\"left\"><B>".$experts[$k]."</B></td>";
+						}
+						$len = 0;
+						$aaa = $len_one;
+						$flag = 1;
+					}
 				}
-				
 				$sql2 ="SELECT c.* FROM {conference_expert} c WHERE c.id IN (%s)";
 				$export_result2 = db_query($sql, $expert);
 				$experts =array();
@@ -232,7 +268,7 @@ echo "</table>";
 			</div>
 		</div>
 		<div
-			style="margin-left: 10px; font-family: 宋 体; font-size: 16pt; line-height: 50px;">
+			style="margin-left: -10px; font-family: 宋 体; font-size: 21pt; line-height: 70px;">
 			<B> <?php 
 			$level = $cnfname->level;
 			$specgrp = $cnfname->specgrp;
@@ -276,7 +312,7 @@ echo "</table>";
 					$height =  round($val,1);
 					$sql_check = "select * from {conference_baseinfo} where specgrp IN ($specgrp) and level='1'";
 					$result_check = db_query($sql_check);
-					echo "高级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+					echo "高级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
 				}
 				if ($level==2){
 					$sql = "select count(*) as num from {conference_applicant} where specgrp IN ($midspecgrp)";
@@ -291,7 +327,7 @@ echo "</table>";
 					$mid =  round($val,1);
 					$sql_check = "select * from {conference_baseinfo} where specgrp IN ($specgrp) and level='2'";
 					$result_check = db_query($sql_check);
-					echo "中级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passmid."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
 				}
 				if ($level==3){
                                  $sql = "select count(*) as num from {conference_applicant} where specgrp IN ($specgrp) AND level = '01'";
@@ -306,13 +342,19 @@ echo "</table>";
                                  $height =  number_format($val, 1, '.', '');
                   //              (float)$height =  round($val,1);
                                  if($numheight>=10 && $passheight<10){
-                                 	echo "高级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+                                 	echo "高级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
                                  }
                                  if($numheight < 10){
-                                 	echo "高级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;&nbsp;".$numheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+                                 	echo "高级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
                                  }
-                                 if($numheight>=10 && $passheight>=10){
-                                 	echo "高级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+                                 if($numheight>=10 && $passheight>=10 && $numheight<100 && $passheight<100){
+                                 	echo "高级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+                                 }
+                                 if($numheight>=100 && $passheight<100 && $passheight>=10){
+                                 	echo "高级："."&nbsp;评审人数&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
+                                 }
+                                 if($numheight>=100 && $passheight>=100){
+                                 	echo "高级："."&nbsp;评审人数&nbsp;&nbsp;".$numheight."名&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passheight."名&nbsp;&nbsp;&nbsp;通过率：".$height."%<br/>";
                                  }
                                  
 
@@ -328,30 +370,36 @@ echo "</table>";
                                  $mid =  number_format($val, 1, '.', '');
                   //               (double)$mid =  round($val,1);
                   				if($nummid>=10 && $passmid<10){
-                  					echo "中级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passmid."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+                  					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
                   				}
                   				if($nummid < 10){
-                  					echo "中级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;&nbsp;".$nummid."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passmid."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+                  					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
                   				}
-                  				if($nummid>=10 && $passmid>=10){
-                  					echo "中级："."&nbsp;&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."&nbsp;名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passmid."&nbsp;名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+                  				if($nummid>=10 && $passmid>=10 && $nummid<100 && $passmid<100){
+                  					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+                  				}
+                  				if($nummid>=100 && $passmid<100 && $passmid>=10){
+                  					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
+                  				}
+                  				if($nummid>=100 && $passmid>=100){
+                  					echo "中级："."&nbsp;评审人数&nbsp;&nbsp;".$nummid."名&nbsp;&nbsp;&nbsp;通过人数&nbsp;&nbsp;".$passmid."名&nbsp;&nbsp;&nbsp;通过率：".$mid."%<br/>";
                   				}
                                 
                                 }
                                 ?>
 			</B>
 		</div>
-		<div style="margin-top: 70px;">
+		<div style="margin-top: 50px;">
 			<div
-				style="margin-left: 350px; font-family: 宋体; font-size: 16pt; line-height: 40px;">
+				style="margin-left: 430px; font-family: 宋体; font-size: 21pt; line-height: 50px;">
 				<B>武汉市专业技术资格评审中心</B>
 			</div>
 			<div
-				style="margin-left: 380px; font-family: 宋体; font-size: 16pt; line-height: 40px;">
+				style="margin-left: 470px; font-family: 宋体; font-size: 21pt; line-height: 50px;">
 				<B>审核人：</B>
 			</div>
 			<div
-				style="margin-left: 430px; font-family: 宋体; font-size: 16pt; line-height: 40px;">
+				style="margin-left: 540px; font-family: 宋体; font-size: 21pt; line-height: 50px;">
 				<B>年&nbsp;&nbsp;&nbsp;&nbsp;月&nbsp;&nbsp;&nbsp;&nbsp;日报送</B>
 			</div>
 		</div>
